@@ -1,0 +1,17 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# large / generated artifacts
+data/*
+!data/.gitkeep
+results/*.pt
+results/checkpoints/
+results/experiment_log.txt
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
