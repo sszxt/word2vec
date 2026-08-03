@@ -27,6 +27,33 @@ from word2vec.models import CBOWModel, SkipGramModel
 from word2vec.vocab import Vocab, read_tokens
 
 
+# Gradient norm is proportional to batch size here, because the loss is
+# scaled by len(batch) before backward() (see the comment in the training
+# loop). A fixed clip threshold is therefore only meaningful at the batch
+# size it was calibrated on. Measured pre-clip norms for CBOW/mean, 300
+# steps: batch 512 -> median 24, batch 2048 -> median 75, batch 8192 ->
+# median 407. The original fixed 150 was calibrated at batch 2048, where it
+# clips 0% of batches -- but at batch 8192 it clips 98% of them, silently
+# throttling training for anyone who changes the batch size.
+#
+# 0.073 = 150/2048 reproduces the original calibration exactly at batch 2048
+# and scales it correctly elsewhere.
+_CLIP_PER_EXAMPLE = 150.0 / 2048.0
+
+# context_grad="sum" makes every context word receive C times more gradient,
+# which raises the total norm by roughly 4.4x at batch 2048 (measured) --
+# less than C because the output-node embeddings are unaffected.
+_SUM_GRAD_FACTOR = 4.5
+
+
+def auto_grad_clip(batch_size: int, arch: str, context_grad: str) -> float:
+    """Clip threshold scaled to the batch size it will actually be used at."""
+    clip = _CLIP_PER_EXAMPLE * batch_size
+    if arch == "cbow" and context_grad == "sum":
+        clip *= _SUM_GRAD_FACTOR
+    return clip
+
+
 def restrict_vocab(vocab: Vocab, vocab_size: int) -> Vocab:
     id2word = vocab.id2word[:vocab_size]
     counts = vocab.counts[:vocab_size]
@@ -49,10 +76,14 @@ def train(
     seed: int,
     device: torch.device,
     out_path: Path,
-    grad_clip_norm: float = 150.0,
+    grad_clip_norm: float | None = None,
+    context_grad: str = "mean",
 ) -> dict:
     if window is None:
         window = 4 if arch == "cbow" else 10
+
+    if grad_clip_norm is None:
+        grad_clip_norm = auto_grad_clip(batch_size, arch, context_grad)
 
     torch.manual_seed(seed)
     rng = np.random.default_rng(seed)
@@ -65,11 +96,17 @@ def train(
     if max_words is not None:
         tokens = tokens[:max_words]
     token_ids = np.array(vocab.encode(tokens), dtype=np.int32)
-    print(f"training tokens: {len(token_ids):,}  vocab: {len(vocab):,}  arch: {arch}  dim: {dim}")
+    print(
+        f"training tokens: {len(token_ids):,}  vocab: {len(vocab):,}  arch: {arch}  dim: {dim}"
+        f"  batch: {batch_size}  grad_clip: {grad_clip_norm:.0f}"
+    )
 
     tree = build_huffman_tree(vocab.counts)
-    model_cls = CBOWModel if arch == "cbow" else SkipGramModel
-    model = model_cls(len(vocab), dim, tree, device).to(device)
+    if arch == "cbow":
+        model = CBOWModel(len(vocab), dim, tree, device, context_grad=context_grad)
+    else:
+        model = SkipGramModel(len(vocab), dim, tree, device)
+    model = model.to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=lr)
 
     def make_epoch_pairs():
@@ -148,6 +185,9 @@ def train(
         "train_tokens": len(token_ids),
         "epochs": epochs,
         "train_seconds": elapsed,
+        "context_grad": context_grad if arch == "cbow" else None,
+        "batch_size": batch_size,
+        "grad_clip_norm": grad_clip_norm,
     }
     torch.save(checkpoint, out_path)
     print(f"saved to {out_path}")
@@ -169,7 +209,19 @@ def main():
     parser.add_argument("--seed", type=int, default=0)
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
-    parser.add_argument("--grad-clip", type=float, default=150.0)
+    parser.add_argument(
+        "--grad-clip",
+        type=float,
+        default=None,
+        help="max global gradient norm; default scales with batch size (see auto_grad_clip)",
+    )
+    parser.add_argument(
+        "--context-grad",
+        choices=["mean", "sum"],
+        default="mean",
+        help="CBOW only: how gradient reaches context words. 'mean' is the true "
+        "gradient; 'sum' reproduces reference word2vec.c (see models.CBOWModel)",
+    )
     args = parser.parse_args()
 
     train(
@@ -187,6 +239,7 @@ def main():
         device=torch.device(args.device),
         out_path=args.out,
         grad_clip_norm=args.grad_clip,
+        context_grad=args.context_grad,
     )
 
 

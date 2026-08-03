@@ -72,6 +72,19 @@ class HierarchicalSoftmax(nn.Module):
         return per_example_loss.mean()
 
 
+class _ScaleGrad(torch.autograd.Function):
+    """Identity forward, gradient scaled by `scale` on the way back."""
+
+    @staticmethod
+    def forward(ctx, x, scale):
+        ctx.scale = scale
+        return x
+
+    @staticmethod
+    def backward(ctx, grad):
+        return grad * ctx.scale, None
+
+
 class _EmbeddingBase(nn.Module):
     def __init__(self, vocab_size: int, embed_dim: int, tree: HuffmanTree, device: torch.device):
         super().__init__()
@@ -84,9 +97,36 @@ class _EmbeddingBase(nn.Module):
 
 
 class CBOWModel(_EmbeddingBase):
+    """CBOW, with a switch for how gradient is distributed to context words.
+
+    `context_grad="mean"` is the mathematically correct gradient of the
+    averaged context vector: each of the C context words receives 1/C of the
+    upstream gradient.
+
+    `context_grad="sum"` reproduces what the reference `word2vec.c` actually
+    does, which is not the true gradient of its own forward pass: it averages
+    the context vectors going forward (`neu1[c] /= cw`) but then adds the
+    accumulated gradient `neu1e` to every context word *undivided*. Each
+    context word therefore receives C times more update than "mean" gives it
+    -- effectively a C-fold larger learning rate on the input embeddings,
+    which matters because CBOW already sees far less gradient signal per token
+    than Skip-gram does (docs/04-training.md).
+    """
+
+    def __init__(self, *args, context_grad: str = "mean", **kwargs):
+        super().__init__(*args, **kwargs)
+        if context_grad not in ("mean", "sum"):
+            raise ValueError(f"context_grad must be 'mean' or 'sum', got {context_grad!r}")
+        self.context_grad = context_grad
+
     def forward(self, contexts: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         """contexts: (batch, 2*window) word ids. targets: (batch,) word ids."""
-        context_vecs = self.in_embeddings(contexts).mean(dim=1)
+        context_embs = self.in_embeddings(contexts)
+        if self.context_grad == "sum":
+            # Cancel the 1/C that mean() will apply on the backward pass, so
+            # each context word ends up with the full upstream gradient.
+            context_embs = _ScaleGrad.apply(context_embs, context_embs.shape[1])
+        context_vecs = context_embs.mean(dim=1)
         return self.loss_fn(context_vecs, targets)
 
 
