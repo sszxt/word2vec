@@ -11,7 +11,11 @@ results/*.pt
 results/checkpoints/
 results/experiment_log.txt
 *.log
+*.zip
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Claude Code session artifacts
+.claude/
