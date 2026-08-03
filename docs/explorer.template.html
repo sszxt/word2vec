@@ -1,0 +1,579 @@
+<title>word2vec explorer</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --border: rgba(11, 11, 11, 0.10);
+    --s1: #2a78d6;
+    --s2: #eb6834;
+    --s3: #1baf7a;
+    --accent-soft: rgba(42, 120, 214, 0.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+      --border: rgba(255, 255, 255, 0.10);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+      --accent-soft: rgba(57, 135, 229, 0.16);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7;
+    --muted: #898781; --grid: #2c2c2a; --axis: #383835;
+    --border: rgba(255, 255, 255, 0.10);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+    --accent-soft: rgba(57, 135, 229, 0.16);
+  }
+
+  body {
+    margin: 0; background: var(--page); color: var(--ink);
+    font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 32px 20px 80px; }
+  header h1 { font-size: 22px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  header p { margin: 0; color: var(--ink-2); max-width: 70ch; }
+  code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.92em; }
+
+  nav { display: flex; flex-wrap: wrap; gap: 4px; margin: 24px 0 20px;
+        border-bottom: 1px solid var(--border); }
+  nav button {
+    appearance: none; border: 0; background: none; color: var(--ink-2);
+    font: inherit; padding: 9px 14px; cursor: pointer; border-radius: 6px 6px 0 0;
+    border-bottom: 2px solid transparent; margin-bottom: -1px;
+  }
+  nav button:hover { background: var(--accent-soft); color: var(--ink); }
+  nav button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--s1); font-weight: 600; }
+
+  section[hidden] { display: none; }
+  .card { background: var(--surface); border: 1px solid var(--border);
+          border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; }
+  h2 { font-size: 16px; margin: 0 0 10px; }
+  .note { color: var(--muted); font-size: 13px; margin: 8px 0 0; max-width: 78ch; }
+
+  label { font-size: 13px; color: var(--ink-2); display: block; margin-bottom: 4px; }
+  input[type=text], select {
+    font: inherit; padding: 7px 10px; border-radius: 7px;
+    border: 1px solid var(--axis); background: var(--surface); color: var(--ink);
+  }
+  input[type=text] { width: 170px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; margin-bottom: 16px; }
+  .err { color: var(--s2); font-size: 13px; min-height: 18px; margin-top: 6px; }
+
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--grid); }
+  th { color: var(--muted); font-weight: 500; font-size: 12px; text-transform: uppercase;
+       letter-spacing: 0.04em; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+  tr.hit td:first-child { font-weight: 600; }
+  tr.hit td { color: var(--s3); }
+  .scroll { overflow-x: auto; }
+
+  .swatch { display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+            margin-right: 6px; vertical-align: middle; }
+  .legend { display: flex; flex-wrap: wrap; gap: 16px; font-size: 13px; color: var(--ink-2);
+            margin-bottom: 6px; }
+  canvas { display: block; width: 100%; height: auto; border-radius: 8px; }
+  svg { display: block; max-width: 100%; overflow: visible; }
+  .tip {
+    position: fixed; pointer-events: none; z-index: 20; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 7px; padding: 6px 9px; font-size: 13px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.14); opacity: 0; transition: opacity .1s;
+    font-variant-numeric: tabular-nums;
+  }
+  .chip { display: inline-block; padding: 1px 7px; border-radius: 20px; font-size: 12px;
+          background: var(--accent-soft); color: var(--ink-2); margin-left: 6px; }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>word2vec explorer</h1>
+    <p>Trained vectors from this reproduction, explorable in the browser. All arithmetic
+      runs locally on the embedded vectors — nothing is fetched.</p>
+  </header>
+
+  <nav role="tablist">
+    <button role="tab" data-panel="neighbours" aria-selected="true">Neighbours</button>
+    <button role="tab" data-panel="analogy" aria-selected="false">Analogy</button>
+    <button role="tab" data-panel="map" aria-selected="false">Map</button>
+    <button role="tab" data-panel="tree" aria-selected="false">Huffman tree</button>
+    <button role="tab" data-panel="results" aria-selected="false">Results</button>
+  </nav>
+
+  <section id="p-neighbours">
+    <div class="card">
+      <div class="controls">
+        <div>
+          <label for="nb-word">Word</label>
+          <input type="text" id="nb-word" value="king" autocomplete="off" spellcheck="false">
+        </div>
+        <div>
+          <label for="nb-k">Neighbours</label>
+          <select id="nb-k"><option>10</option><option>15</option><option>20</option></select>
+        </div>
+      </div>
+      <div class="err" id="nb-err"></div>
+      <div class="cols" id="nb-out"></div>
+      <p class="note">Cosine similarity against every exposed word. Comparing the two
+        architectures on the same query is the fastest way to see the difference the
+        accuracy tables report.</p>
+    </div>
+  </section>
+
+  <section id="p-analogy" hidden>
+    <div class="card">
+      <h2>a is to b as c is to ?</h2>
+      <div class="controls">
+        <div><label for="an-a">a</label><input type="text" id="an-a" value="man" autocomplete="off"></div>
+        <div><label for="an-b">b</label><input type="text" id="an-b" value="woman" autocomplete="off"></div>
+        <div><label for="an-c">c</label><input type="text" id="an-c" value="king" autocomplete="off"></div>
+        <div>
+          <label for="an-pick">Load a real test question</label>
+          <select id="an-pick"></select>
+        </div>
+      </div>
+      <div class="err" id="an-err"></div>
+      <div class="cols" id="an-out"></div>
+      <p class="note">Computes <code>vec(b) − vec(a) + vec(c)</code> and ranks by cosine, the
+        paper's 3CosAdd rule. <code>a</code>, <code>b</code> and <code>c</code> are excluded from
+        the results, exactly as in <code>evaluate.py</code>. Loading a test question marks the
+        expected answer. Note this searches a truncated vocabulary, so it is easier than the
+        real benchmark — see the caveat at the bottom of the Results tab.</p>
+    </div>
+  </section>
+
+  <section id="p-map" hidden>
+    <div class="card">
+      <div class="controls">
+        <div>
+          <label for="map-model">Model</label>
+          <select id="map-model"></select>
+        </div>
+        <div>
+          <label for="map-cat">Highlight category</label>
+          <select id="map-cat"></select>
+        </div>
+      </div>
+      <canvas id="map-canvas" width="1040" height="560"></canvas>
+      <p class="note">First two principal components of the unit-normalized vectors. A 2D
+        shadow of 100 dimensions discards most of the structure, so read clustering as
+        suggestive, not as evidence — the neighbour and analogy tabs operate on the full
+        vectors. Highlighting one category at a time keeps the encoding readable rather than
+        cycling colours no one can tell apart.</p>
+    </div>
+  </section>
+
+  <section id="p-tree" hidden>
+    <div class="card">
+      <h2>Hierarchical softmax path</h2>
+      <div class="controls">
+        <div><label for="tr-word">Word</label><input type="text" id="tr-word" value="king" autocomplete="off"></div>
+      </div>
+      <div class="err" id="tr-err"></div>
+      <div id="tr-out"></div>
+      <p class="note">Each word is a leaf of a Huffman tree built over corpus frequencies.
+        Predicting it costs one binary decision per edge on its root-to-leaf path, so the
+        per-prediction cost is the path length rather than the vocabulary size — which is the
+        whole point of the technique in <code>docs/03</code>.</p>
+    </div>
+    <div class="card">
+      <h2>Depth against frequency</h2>
+      <svg id="tr-scatter" viewBox="0 0 1040 360" role="img"
+           aria-label="Huffman code length against word frequency rank"></svg>
+      <p class="note">Frequent words sit nearer the root and cost fewer decisions. That is what
+        makes the average cost far better than the <code>log₂(V)</code> worst case.</p>
+    </div>
+  </section>
+
+  <section id="p-results" hidden>
+    <div class="card">
+      <h2>Architecture comparison <span class="chip">3 seeds, mean ± sd</span></h2>
+      <svg id="ch-arch" viewBox="0 0 1040 300" role="img" aria-label="Total accuracy by configuration"></svg>
+    </div>
+    <div class="card">
+      <h2>CBOW: data amount × dimensionality</h2>
+      <div class="legend" id="lg-b"></div>
+      <svg id="ch-b" viewBox="0 0 1040 320" role="img" aria-label="Accuracy against training tokens"></svg>
+    </div>
+    <div class="card">
+      <h2>CBOW: epochs × data amount</h2>
+      <div class="legend" id="lg-d"></div>
+      <svg id="ch-d" viewBox="0 0 1040 320" role="img" aria-label="Accuracy against epochs"></svg>
+      <p class="note">The paper claims one epoch over twice the data matches or beats three
+        epochs over the same data. It does not hold here — see <code>docs/06-results.md</code>.</p>
+    </div>
+    <div class="card">
+      <h2>Per-category accuracy <span class="chip">full vocabulary</span></h2>
+      <div class="scroll"><table id="tb-cat"></table></div>
+      <p class="note">Computed over all <span id="full-vocab"></span> vocabulary words by
+        <code>scripts/export_viz.py</code>, so these match <code>scripts/evaluate.py</code>. The
+        interactive tabs above search only the <span id="n-words"></span> most frequent words and
+        use int8-quantized vectors, which makes them easier and slightly less precise. Treat
+        those as exploration; treat this table as the measurement.</p>
+    </div>
+  </section>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+const DATA = /*__WORD2VEC_DATA__*/;
+
+/* ---------- decode vectors ---------- */
+const DIM = DATA.models[0].dim;
+const N = DATA.words.length;
+const index = new Map(DATA.words.map((w, i) => [w, i]));
+
+for (const m of DATA.models) {
+  const bin = atob(m.vectors);
+  const raw = new Int8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) raw[i] = (bin.charCodeAt(i) << 24) >> 24;
+  // re-normalize: quantization leaves vectors slightly off the unit sphere
+  const v = new Float32Array(N * DIM);
+  for (let i = 0; i < N; i++) {
+    let s = 0;
+    for (let d = 0; d < DIM; d++) { const x = raw[i * DIM + d] / 127; v[i * DIM + d] = x; s += x * x; }
+    s = Math.sqrt(s) || 1;
+    for (let d = 0; d < DIM; d++) v[i * DIM + d] /= s;
+  }
+  m.vec = v;
+}
+
+const dot = (v, i, q) => { let s = 0; for (let d = 0; d < DIM; d++) s += v[i * DIM + d] * q[d]; return s; };
+
+function rank(model, query, exclude, k) {
+  const out = [];
+  let worst = -Infinity;
+  for (let i = 0; i < N; i++) {
+    if (exclude.has(i)) continue;
+    const s = dot(model.vec, i, query);
+    if (out.length < k) { out.push([i, s]); out.sort((a, b) => b[1] - a[1]); worst = out[out.length - 1][1]; }
+    else if (s > worst) { out[k - 1] = [i, s]; out.sort((a, b) => b[1] - a[1]); worst = out[k - 1][1]; }
+  }
+  return out;
+}
+
+const vecOf = (model, i) => model.vec.subarray(i * DIM, (i + 1) * DIM);
+
+/* ---------- tabs ---------- */
+const panels = ["neighbours", "analogy", "map", "tree", "results"];
+document.querySelectorAll('nav button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('nav button').forEach(b => b.setAttribute('aria-selected', String(b === btn)));
+    panels.forEach(p => document.getElementById('p-' + p).hidden = (p !== btn.dataset.panel));
+    if (btn.dataset.panel === 'map') drawMap();
+  });
+});
+
+/* ---------- tooltip ---------- */
+const tip = document.getElementById('tip');
+function showTip(e, html) {
+  tip.innerHTML = html; tip.style.opacity = '1';
+  tip.style.left = Math.min(e.clientX + 14, innerWidth - tip.offsetWidth - 8) + 'px';
+  tip.style.top = (e.clientY + 16) + 'px';
+}
+const hideTip = () => tip.style.opacity = '0';
+
+/* ---------- neighbours ---------- */
+const nbWord = document.getElementById('nb-word'), nbK = document.getElementById('nb-k');
+function renderNeighbours() {
+  const w = nbWord.value.trim().toLowerCase();
+  const err = document.getElementById('nb-err'), out = document.getElementById('nb-out');
+  const i = index.get(w);
+  if (i === undefined) {
+    err.textContent = w ? `"${w}" is not among the ${N.toLocaleString()} exposed words.` : '';
+    out.innerHTML = ''; return;
+  }
+  err.textContent = '';
+  const k = +nbK.value;
+  out.innerHTML = DATA.models.map(m => {
+    const rows = rank(m, vecOf(m, i), new Set([i]), k)
+      .map(([j, s], n) => `<tr><td class="num">${n + 1}</td><td>${DATA.words[j]}</td><td class="num">${s.toFixed(3)}</td></tr>`)
+      .join('');
+    return `<div><table><thead><tr><th colspan="2">${m.label}</th><th class="num">cos</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  }).join('');
+}
+nbWord.addEventListener('input', renderNeighbours);
+nbK.addEventListener('change', renderNeighbours);
+
+/* ---------- analogy ---------- */
+const anA = document.getElementById('an-a'), anB = document.getElementById('an-b'), anC = document.getElementById('an-c');
+const anPick = document.getElementById('an-pick');
+let expected = null;
+
+anPick.innerHTML = '<option value="">—</option>' + DATA.questions.slice(0, 400)
+  .map((q, i) => `<option value="${i}">${DATA.words[q[0]]} : ${DATA.words[q[1]]} :: ${DATA.words[q[2]]} : ?</option>`).join('');
+anPick.addEventListener('change', () => {
+  const q = DATA.questions[+anPick.value];
+  if (!q) { expected = null; return; }
+  anA.value = DATA.words[q[0]]; anB.value = DATA.words[q[1]]; anC.value = DATA.words[q[2]];
+  expected = q[3];
+  renderAnalogy();
+});
+
+function renderAnalogy() {
+  const err = document.getElementById('an-err'), out = document.getElementById('an-out');
+  const ids = [anA, anB, anC].map(el => index.get(el.value.trim().toLowerCase()));
+  const missing = [anA, anB, anC].filter((el, n) => ids[n] === undefined).map(el => el.value.trim());
+  if (missing.length) {
+    err.textContent = `Not in the exposed vocabulary: ${missing.join(', ')}`;
+    out.innerHTML = ''; return;
+  }
+  err.textContent = '';
+  const [ia, ib, ic] = ids, ex = new Set(ids);
+  out.innerHTML = DATA.models.map(m => {
+    const q = new Float32Array(DIM);
+    const A = vecOf(m, ia), B = vecOf(m, ib), C = vecOf(m, ic);
+    for (let d = 0; d < DIM; d++) q[d] = B[d] - A[d] + C[d];
+    const rows = rank(m, q, ex, 10).map(([j, s], n) => {
+      const hit = expected !== null && j === expected;
+      return `<tr class="${hit ? 'hit' : ''}"><td class="num">${n + 1}</td><td>${DATA.words[j]}${hit ? ' ✓' : ''}</td><td class="num">${s.toFixed(3)}</td></tr>`;
+    }).join('');
+    const head = expected !== null
+      ? `${m.label} — expected <strong>${DATA.words[expected]}</strong>` : m.label;
+    return `<div><table><thead><tr><th colspan="2">${head}</th><th class="num">cos</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  }).join('');
+}
+[anA, anB, anC].forEach(el => el.addEventListener('input', () => { expected = null; anPick.value = ''; renderAnalogy(); }));
+
+/* ---------- map ---------- */
+const mapModel = document.getElementById('map-model'), mapCat = document.getElementById('map-cat');
+mapModel.innerHTML = DATA.models.map((m, i) => `<option value="${i}">${m.label}</option>`).join('');
+mapCat.innerHTML = '<option value="-1">none</option>' +
+  DATA.categories.map((c, i) => `<option value="${i}">${c.name}</option>`).join('');
+
+const catWords = DATA.categories.map(() => new Set());
+DATA.questions.forEach(q => { for (let n = 0; n < 4; n++) catWords[q[4]].add(q[n]); });
+
+function drawMap() {
+  const cv = document.getElementById('map-canvas'), ctx = cv.getContext('2d');
+  const cs = getComputedStyle(document.documentElement);
+  const m = DATA.models[+mapModel.value], ci = +mapCat.value;
+  const hi = ci >= 0 ? catWords[ci] : null;
+  const W = cv.width, H = cv.height, pad = 24;
+  ctx.clearRect(0, 0, W, H);
+  const px = ([x, y]) => [pad + (x + 1) / 2 * (W - 2 * pad), pad + (1 - (y + 1) / 2) * (H - 2 * pad)];
+
+  ctx.fillStyle = cs.getPropertyValue('--axis').trim();
+  ctx.globalAlpha = hi ? 0.25 : 0.55;
+  for (let i = 0; i < N; i++) {
+    if (hi && hi.has(i)) continue;
+    const [x, y] = px(m.coords[i]);
+    ctx.fillRect(x, y, 1.6, 1.6);
+  }
+  ctx.globalAlpha = 1;
+  if (hi) {
+    ctx.fillStyle = cs.getPropertyValue('--s1').trim();
+    ctx.font = '11px system-ui, sans-serif';
+    for (const i of hi) {
+      const [x, y] = px(m.coords[i]);
+      ctx.beginPath(); ctx.arc(x, y, 3.2, 0, 6.284); ctx.fill();
+    }
+    ctx.fillStyle = cs.getPropertyValue('--ink').trim();
+    let shown = 0;
+    for (const i of hi) {
+      if (shown++ > 45) break;
+      const [x, y] = px(m.coords[i]);
+      ctx.fillText(DATA.words[i], x + 5, y - 4);
+    }
+  }
+}
+mapModel.addEventListener('change', drawMap);
+mapCat.addEventListener('change', drawMap);
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { drawMap(); drawAll(); });
+
+/* ---------- huffman ---------- */
+const SVGNS = 'http://www.w3.org/2000/svg';
+const el = (n, a = {}) => { const e = document.createElementNS(SVGNS, n); for (const k in a) e.setAttribute(k, a[k]); return e; };
+
+document.getElementById('tr-word').addEventListener('input', renderTree);
+function renderTree() {
+  const w = document.getElementById('tr-word').value.trim().toLowerCase();
+  const err = document.getElementById('tr-err'), out = document.getElementById('tr-out');
+  const i = index.get(w);
+  if (i === undefined) { err.textContent = w ? `"${w}" is not among the exposed words.` : ''; out.innerHTML = ''; return; }
+  err.textContent = '';
+  const code = DATA.huffman.codes[i];
+  const freq = DATA.counts[i];
+  const svg = el('svg', { viewBox: `0 0 ${Math.max(560, code.length * 46 + 120)} 150` });
+  let x = 40;
+  svg.appendChild(el('text', { x: 8, y: 58, fill: 'var(--muted)', 'font-size': 12 })).textContent = 'root';
+  for (let d = 0; d < code.length; d++) {
+    const bit = code[d] === '1';
+    const y1 = 54, y2 = 54 + (bit ? 26 : -26);
+    const ln = el('line', { x1: x, y1, x2: x + 40, y2, stroke: bit ? 'var(--s1)' : 'var(--s2)', 'stroke-width': 2, 'stroke-linecap': 'round' });
+    svg.appendChild(ln);
+    const t = el('text', { x: x + 20, y: bit ? y2 + 15 : y2 - 7, 'text-anchor': 'middle', fill: 'var(--muted)', 'font-size': 11 });
+    t.textContent = bit ? '1' : '0';
+    svg.appendChild(t);
+    svg.appendChild(el('circle', { cx: x + 40, cy: y2, r: 3.5, fill: 'var(--axis)' }));
+    x += 40;
+  }
+  const leaf = el('circle', { cx: x, cy: 54 + (code[code.length - 1] === '1' ? 26 : -26), r: 5, fill: 'var(--s3)' });
+  const lastY = 54 + (code[code.length - 1] === '1' ? 26 : -26);
+  leaf.setAttribute('cy', lastY);
+  svg.appendChild(leaf);
+  const lt = el('text', { x: x + 10, y: lastY + 4, fill: 'var(--ink)', 'font-size': 13, 'font-weight': 600 });
+  lt.textContent = w;
+  svg.appendChild(lt);
+  out.innerHTML = '';
+  out.appendChild(svg);
+  const pct = (freq / DATA.totalTokens * 100).toFixed(4);
+  out.insertAdjacentHTML('beforeend',
+    `<p class="note"><code>${code}</code> — ${code.length} binary decisions
+     (tree max ${DATA.huffman.maxDepth}, ${DATA.huffman.internal.toLocaleString()} internal nodes).
+     Rank ${(i + 1).toLocaleString()} by frequency, ${freq.toLocaleString()} occurrences (${pct}% of the corpus).
+     A flat softmax would instead score all ${DATA.fullVocab.toLocaleString()} words.</p>`);
+}
+
+function drawTreeScatter() {
+  const svg = document.getElementById('tr-scatter');
+  svg.innerHTML = '';
+  const W = 1040, H = 360, L = 52, R = 16, T = 14, B = 38;
+  const depths = DATA.huffman.codes.map(c => c.length);
+  const maxD = Math.max(...depths);
+  const X = r => L + Math.log10(r + 1) / Math.log10(N) * (W - L - R);
+  const Y = d => T + (1 - d / maxD) * (H - T - B);
+  for (let g = 0; g <= maxD; g += 4) {
+    svg.appendChild(el('line', { x1: L, y1: Y(g), x2: W - R, y2: Y(g), stroke: 'var(--grid)', 'stroke-width': 1 }));
+    const t = el('text', { x: L - 8, y: Y(g) + 4, 'text-anchor': 'end', fill: 'var(--muted)', 'font-size': 11 });
+    t.textContent = g; svg.appendChild(t);
+  }
+  for (let i = 0; i < N; i += 2) {
+    svg.appendChild(el('rect', { x: X(i), y: Y(depths[i]), width: 1.5, height: 1.5, fill: 'var(--s1)', opacity: 0.35 }));
+  }
+  const yl = el('text', { x: 12, y: T + 10, fill: 'var(--muted)', 'font-size': 11 });
+  yl.textContent = 'code length'; svg.appendChild(yl);
+  const xl = el('text', { x: W / 2, y: H - 6, 'text-anchor': 'middle', fill: 'var(--muted)', 'font-size': 11 });
+  xl.textContent = 'frequency rank (log scale) — most frequent at left'; svg.appendChild(xl);
+  svg.appendChild(el('line', { x1: L, y1: H - B, x2: W - R, y2: H - B, stroke: 'var(--axis)', 'stroke-width': 1 }));
+}
+
+/* ---------- results charts ---------- */
+const rows = (() => {
+  const lines = DATA.summary.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const head = lines[0].split(',');
+  return lines.slice(1).map(l => Object.fromEntries(l.split(',').map((v, i) => [head[i], v])));
+})();
+const byName = Object.fromEntries(rows.map(r => [r.name, r]));
+const acc = n => byName[n] ? +byName[n].total_acc_mean : null;
+const sd = n => byName[n] ? +byName[n].total_acc_std : 0;
+
+function drawBars() {
+  const svg = document.getElementById('ch-arch'); svg.innerHTML = '';
+  const items = [
+    ['CBOW (mean rule)', 'expA_cbow_d100_full_mean'],
+    ['CBOW (sum rule)', 'expA_cbow_d100_full_sum'],
+    ['CBOW + subsampling', 'expE_cbow_d100_full_sample1e-3'],
+    ['Skip-gram', 'expA_skipgram_d100_full'],
+    ['Skip-gram + subsampling', 'expE_skipgram_d100_full_sample1e-3'],
+  ].filter(([, n]) => acc(n) !== null);
+  if (!items.length) return;
+  const W = 1040, H = 300, L = 190, R = 40, T = 10, B = 34;
+  const max = Math.max(...items.map(([, n]) => acc(n) + sd(n))) * 1.15;
+  const X = v => L + v / max * (W - L - R);
+  const bh = (H - T - B) / items.length;
+  for (let g = 0; g <= max; g += 5) {
+    svg.appendChild(el('line', { x1: X(g), y1: T, x2: X(g), y2: H - B, stroke: 'var(--grid)', 'stroke-width': 1 }));
+    const t = el('text', { x: X(g), y: H - B + 16, 'text-anchor': 'middle', fill: 'var(--muted)', 'font-size': 11 });
+    t.textContent = g + '%'; svg.appendChild(t);
+  }
+  items.forEach(([label, n], i) => {
+    const y = T + i * bh + 6, h = bh - 14, v = acc(n);
+    const bar = el('rect', { x: L, y, width: Math.max(2, X(v) - L), height: h, rx: 4, fill: 'var(--s1)' });
+    svg.appendChild(bar);
+    const lb = el('text', { x: L - 10, y: y + h / 2 + 4, 'text-anchor': 'end', fill: 'var(--ink-2)', 'font-size': 13 });
+    lb.textContent = label; svg.appendChild(lb);
+    const vl = el('text', { x: X(v) + 8, y: y + h / 2 + 4, fill: 'var(--ink)', 'font-size': 13, 'font-weight': 600 });
+    vl.textContent = v.toFixed(2) + '%'; svg.appendChild(vl);
+    if (sd(n) > 0) {
+      const y0 = y + h / 2;
+      svg.appendChild(el('line', { x1: X(v - sd(n)), y1: y0, x2: X(v + sd(n)), y2: y0, stroke: 'var(--ink)', 'stroke-width': 1.5, opacity: 0.55 }));
+    }
+    bar.addEventListener('mousemove', e => showTip(e, `<strong>${label}</strong><br>${v.toFixed(2)}% ± ${sd(n).toFixed(2)}`));
+    bar.addEventListener('mouseleave', hideTip);
+  });
+  svg.appendChild(el('line', { x1: L, y1: H - B, x2: W - R, y2: H - B, stroke: 'var(--axis)', 'stroke-width': 1 }));
+}
+
+function lineChart(svgId, legendId, series, xs, xLabel, fmtX) {
+  const svg = document.getElementById(svgId); svg.innerHTML = '';
+  const W = 1040, H = 320, L = 52, R = 24, T = 14, B = 42;
+  const all = series.flatMap(s => s.pts.map(p => p[1])).filter(v => v !== null);
+  if (!all.length) return;
+  const max = Math.max(...all) * 1.15;
+  const X = i => L + (xs.length === 1 ? 0.5 : i / (xs.length - 1)) * (W - L - R);
+  const Y = v => T + (1 - v / max) * (H - T - B);
+  const step = max > 8 ? 5 : 1;
+  for (let g = 0; g <= max; g += step) {
+    svg.appendChild(el('line', { x1: L, y1: Y(g), x2: W - R, y2: Y(g), stroke: 'var(--grid)', 'stroke-width': 1 }));
+    const t = el('text', { x: L - 8, y: Y(g) + 4, 'text-anchor': 'end', fill: 'var(--muted)', 'font-size': 11 });
+    t.textContent = g + '%'; svg.appendChild(t);
+  }
+  xs.forEach((x, i) => {
+    const t = el('text', { x: X(i), y: H - B + 18, 'text-anchor': 'middle', fill: 'var(--muted)', 'font-size': 11 });
+    t.textContent = fmtX(x); svg.appendChild(t);
+  });
+  const xl = el('text', { x: W / 2, y: H - 6, 'text-anchor': 'middle', fill: 'var(--muted)', 'font-size': 11 });
+  xl.textContent = xLabel; svg.appendChild(xl);
+
+  series.forEach((s, si) => {
+    const color = `var(--s${si + 1})`;
+    const pts = s.pts.map((p, i) => [X(i), p[1] === null ? null : Y(p[1])]).filter(p => p[1] !== null);
+    svg.appendChild(el('path', {
+      d: pts.map((p, i) => (i ? 'L' : 'M') + p[0] + ' ' + p[1]).join(' '),
+      fill: 'none', stroke: color, 'stroke-width': 2, 'stroke-linecap': 'round', 'stroke-linejoin': 'round'
+    }));
+    s.pts.forEach((p, i) => {
+      if (p[1] === null) return;
+      const c = el('circle', { cx: X(i), cy: Y(p[1]), r: 4.5, fill: color, stroke: 'var(--surface)', 'stroke-width': 2 });
+      c.addEventListener('mousemove', e => showTip(e, `<strong>${s.label}</strong><br>${fmtX(xs[i])} → ${p[1].toFixed(2)}%`));
+      c.addEventListener('mouseleave', hideTip);
+      svg.appendChild(c);
+    });
+    const last = s.pts.map((p, i) => [i, p[1]]).filter(p => p[1] !== null).pop();
+    if (last) {
+      const t = el('text', { x: X(last[0]) + 9, y: Y(last[1]) + 4, fill: 'var(--ink-2)', 'font-size': 12 });
+      t.textContent = s.label; svg.appendChild(t);
+    }
+  });
+  svg.appendChild(el('line', { x1: L, y1: H - B, x2: W - R, y2: H - B, stroke: 'var(--axis)', 'stroke-width': 1 }));
+  document.getElementById(legendId).innerHTML = series.map((s, i) =>
+    `<span><span class="swatch" style="background:var(--s${i + 1})"></span>${s.label}</span>`).join('');
+}
+
+function drawAll() {
+  drawBars();
+  const tags = ['2M', '4M', '8M', 'full'];
+  lineChart('ch-b', 'lg-b',
+    [50, 100, 300].map(d => ({ label: 'dim ' + d, pts: tags.map(t => [t, acc(`expB_cbow_d${d}_${t}`)]) })),
+    tags, 'training tokens', t => t === 'full' ? '16.7M' : t);
+  const eps = [1, 2, 3];
+  lineChart('ch-d', 'lg-d',
+    ['2M', '4M', '8M'].map(t => ({ label: t + ' tokens', pts: eps.map(e => [e, acc(`expD_cbow_d100_${t}_e${e}`)]) })),
+    eps, 'epochs', e => e + (e === 1 ? ' epoch' : ' epochs'));
+
+  const cats = Object.keys(DATA.models[0].accuracy).filter(k => !['semantic', 'syntactic', 'total'].includes(k)).sort();
+  const order = [...cats, 'semantic', 'syntactic', 'total'];
+  document.getElementById('tb-cat').innerHTML =
+    `<thead><tr><th>category</th>${DATA.models.map(m => `<th class="num">${m.label}</th>`).join('')}</tr></thead><tbody>` +
+    order.map(c => {
+      const bold = ['semantic', 'syntactic', 'total'].includes(c);
+      return `<tr><td${bold ? ' style="font-weight:600"' : ''}>${c}</td>` +
+        DATA.models.map(m => `<td class="num"${bold ? ' style="font-weight:600;color:var(--ink)"' : ''}>${(m.accuracy[c] ?? 0).toFixed(2)}%</td>`).join('') + '</tr>';
+    }).join('') + '</tbody>';
+}
+
+document.getElementById('full-vocab').textContent = DATA.fullVocab.toLocaleString();
+document.getElementById('n-words').textContent = N.toLocaleString();
+renderNeighbours(); renderAnalogy(); renderTree(); drawTreeScatter(); drawAll();
+</script>

@@ -108,6 +108,33 @@ python scripts/evaluate.py results/cbow.pt
 Prints per-category accuracy plus semantic / syntactic / total rollups on
 the analogy task.
 
+## Exploring the vectors
+
+```
+python scripts/nearest.py king france water
+```
+
+Prints nearest neighbours by cosine similarity, several checkpoints side by
+side. Comparing CBOW against Skip-gram on the same query shows the difference
+the accuracy tables report.
+
+For an interactive version, open [`docs/explorer.html`](docs/explorer.html) in
+a browser -- no server, no network requests. It has neighbour lookup, live
+`vec(b) − vec(a) + vec(c)` analogy arithmetic over the real test questions, a
+2D projection of the vector space, a Huffman-path visualizer for
+`docs/03-hierarchical-softmax.md`, and the result charts. Regenerate it after
+training with:
+
+```
+python scripts/export_viz.py
+```
+
+The committed copy is generated from the checkpoints this repository was
+developed against. Note that the interactive tabs search a truncated
+vocabulary using quantized vectors, so accuracy seen there runs well above the
+real benchmark -- the per-category table in its Results tab is computed over
+the full vocabulary and is the number that matters.
+
 ## Reproducing the full experiment suite
 
 ```
