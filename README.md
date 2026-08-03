@@ -12,9 +12,10 @@ public text8 corpus, at a scale small enough to run in minutes rather than
 the paper's original multi-day distributed training run.
 
 It is written as a guided, documented reproduction: `docs/` walks through the
-paper's ideas in the order they're implemented, including two real training
+paper's ideas in the order they're implemented, including three real training
 bugs that came up during this reproduction and how they were diagnosed and
-fixed.
+fixed -- one of which was found only after an earlier experiment produced a
+confidently wrong conclusion.
 
 ## Reading order
 
@@ -23,25 +24,26 @@ fixed.
 | [`docs/01-background.md`](docs/01-background.md) | Why atomic word representations fail; NNLM/RNNLM and their cost |
 | [`docs/02-architectures.md`](docs/02-architectures.md) | CBOW and Skip-gram: what they predict and why |
 | [`docs/03-hierarchical-softmax.md`](docs/03-hierarchical-softmax.md) | Huffman-tree softmax: the training-cost trick shared by both models |
-| [`docs/04-training.md`](docs/04-training.md) | SGD schedule, batching, and two real bugs hit while reproducing this |
+| [`docs/04-training.md`](docs/04-training.md) | SGD schedule, batching, three real bugs hit while reproducing this, and CBOW's unspecified backward pass |
 | [`docs/05-evaluation-task.md`](docs/05-evaluation-task.md) | The analogy task (3CosAdd) and vocabulary coverage |
 | [`docs/06-results.md`](docs/06-results.md) | Full results, compared point-by-point against the paper's tables |
 
 ## Results at a glance
 
-CBOW vs Skip-gram, dim=100, full text8 (16.7M tokens), 1 epoch:
+CBOW vs Skip-gram, dim=100, full text8 (16.7M tokens), 1 epoch, mean ± stdev
+over 3 seeds:
 
 | Architecture | Semantic | Syntactic | Total |
 |---|---|---|---|
-| CBOW | 3.7% | 4.5% | 4.2% |
-| Skip-gram | 14.6% | 20.3% | 17.9% |
+| CBOW | 6.03 ± 0.03 | 8.53 ± 0.44 | 7.49 ± 0.27 |
+| Skip-gram | 15.57 ± 0.92 | 20.08 ± 0.19 | 18.21 ± 0.32 |
 
 This reproduces the paper's central qualitative finding -- Skip-gram beats
 CBOW by a wide margin on semantic analogies -- at roughly 1/50th of the
 paper's smallest data size. See [`docs/06-results.md`](docs/06-results.md)
-for the full dimensionality/data-amount sweep and a point-by-point
-comparison against the paper's own tables, including where our small-scale
-results diverge from theirs and why.
+for the full dimensionality, data-amount and epoch sweeps and a
+point-by-point comparison against the paper's tables, including two places
+where our results disagree with theirs and why.
 
 ## Repository layout
 
@@ -55,9 +57,9 @@ src/word2vec/     library code
   models.py          CBOW and Skip-gram models, hierarchical softmax loss
   train.py           training loop (SGD, linear LR decay, gradient clipping)
   evaluate.py        analogy evaluation (3CosAdd)
-scripts/          CLI entry points (download data, train, evaluate, run the full experiment suite)
+scripts/          CLI entry points (download data, train, evaluate, nearest neighbours, run the full experiment suite)
 tests/            unit tests for every module above
-results/          results.json / results.csv from the experiment suite (checkpoints are gitignored)
+results/          results.{json,csv} and results_summary.csv from the experiment suite (checkpoints are gitignored)
 ```
 
 ## Setup
@@ -90,6 +92,13 @@ match the paper: CBOW uses a symmetric 4-word window (8 words of context
 total), Skip-gram uses a dynamic window up to 10, both start at learning
 rate 0.025 decayed linearly to (approximately) zero.
 
+Two flags control choices the paper does not specify, both documented in
+[`docs/04-training.md`](docs/04-training.md): `--context-grad` selects how
+CBOW distributes gradient to its context words (`mean` is the true
+derivative, `sum` reproduces reference `word2vec.c` and is what the
+experiment suite uses), and `--grad-clip` overrides a clipping threshold
+that otherwise scales with batch size.
+
 ## Evaluating a checkpoint
 
 ```
@@ -105,13 +114,17 @@ the analogy task.
 python scripts/run_experiments.py
 ```
 
-Runs the architecture comparison, the CBOW dimensionality/data-amount sweep,
-and the Skip-gram dimensionality sweep described in
-[`docs/06-results.md`](docs/06-results.md), and writes
-`results/results.json` / `results/results.csv`. Takes roughly 15-20 minutes
-on a single consumer GPU (text8 is small; Skip-gram's larger pair count is
-the dominant cost -- see the training-time breakdown in
-[`docs/06-results.md`](docs/06-results.md)).
+Runs all five experiments described in
+[`docs/06-results.md`](docs/06-results.md) -- architecture comparison, CBOW
+dimensionality/data-amount grid, Skip-gram dimensionality sweep, epochs vs
+data amount, and a subsampling arm marked as beyond-the-paper -- over 3
+seeds each (87 runs, `--seeds` to change). Writes per-run
+`results/results.{json,csv}` and per-configuration means and standard
+deviations to `results/results_summary.csv`.
+
+Takes roughly an hour on a single consumer GPU. Skip-gram's larger pair
+count dominates the cost -- see the training-time breakdown in
+[`docs/06-results.md`](docs/06-results.md).
 
 ## Tests
 

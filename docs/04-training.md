@@ -77,12 +77,15 @@ to hit a destabilizing sequence of batches -- not because CBOW is immune to
 it.
 
 Fix: clip the global gradient norm to just above the observed healthy range.
-`grad_clip_norm=150` (the `train()` default) caps the worst-case single step
-without touching normal ones, breaking the compounding loop before it can
-start. Verified empirically on the exact failing configuration (Skip-gram,
-dim=100, full text8, batch_size=2048, 1 epoch): no NaN, 17.9% total analogy
-accuracy. Verified the same setting doesn't cost CBOW anything: 4.2% total
-accuracy clipped, identical to unclipped.
+A clip of 150 caps the worst-case single step without touching normal ones,
+breaking the compounding loop before it can start. Verified empirically on
+the exact failing configuration (Skip-gram, dim=100, full text8,
+batch_size=2048, 1 epoch): no NaN, 17.9% total analogy accuracy. Verified
+the same setting doesn't cost CBOW anything: 4.2% total accuracy clipped,
+identical to unclipped.
+
+That 150 was right — but only for the batch size it was measured at, which
+took a while to notice. See "A third pitfall" below.
 
 A first attempt at this fix used `max_norm=5.0`, reasoning (incorrectly)
 that the paper's implicit per-example SGD should only ever need very small
@@ -92,6 +95,77 @@ along with the instability -- CBOW's own healthy gradient norms sit at
 collapsed from 4.2% to 0.3%. The lesson: measure the actual healthy gradient
 scale before picking a clipping threshold, rather than picking a
 small-sounding number and assuming smaller is safer.
+
+## A third pitfall: a clipping threshold that only works at one batch size
+
+The two fixes above interact, and the interaction hid a bug for a while.
+
+Because the loss is scaled by `len(batch)` before `backward()` (first pitfall),
+the gradient norm is *proportional to batch size*. But the clip introduced by
+the second pitfall was a fixed constant, 150, calibrated by measuring norms at
+`batch_size=2048`. A fixed threshold against a batch-size-dependent quantity is
+only meaningful at the batch size where it was measured.
+
+Measured pre-clip global gradient norms, CBOW, 300 steps each:
+
+| batch size | median norm | % of batches clipped at 150 |
+|---|---|---|
+| 512 | 24 | 0% |
+| 2048 | 75 | 0% |
+| 8192 | 407 | **98%** |
+
+At `batch_size=8192` the "safety" clip renormalizes almost every gradient in
+training, silently throttling learning to a crawl. Nothing crashes, nothing
+NaNs, the loss still decreases — it just decreases from behind an invisible
+handbrake. Anyone who changed `--batch-size` for GPU-memory reasons got a
+quietly different algorithm.
+
+Fix, in `train.py`: derive the threshold per-example rather than fixing it.
+`_CLIP_PER_EXAMPLE = 150/2048`, so `auto_grad_clip()` reproduces the original
+calibration *exactly* at batch 2048 and scales correctly everywhere else.
+Passing `--grad-clip` explicitly still overrides it. Backward compatibility is
+verified against the previously published result: CBOW dim=100 full data at
+seed 0 still gives exactly 3.67 / 4.55 / 4.18.
+
+The general lesson is narrower than "clip gradients" and more useful: a
+threshold is a measurement, and a measurement is only valid under the
+conditions it was taken. The second pitfall's own lesson — measure the healthy
+gradient scale before choosing a clip — was correct but incomplete, because it
+did not ask *what that scale depends on*.
+
+## CBOW's context gradient: where the paper stops specifying
+
+CBOW averages its context word vectors before scoring (`docs/02`). The
+mathematically correct derivative of that average gives each of the `C` context
+words `1/C` of the upstream gradient, which is what `.mean(dim=1)` produces
+under autograd and what this implementation originally did.
+
+The reference `word2vec.c` does something else. It averages going forward
+(`neu1[c] /= cw`) and then adds the accumulated gradient `neu1e` to every
+context word **undivided** — so each context word receives `C` times more
+update than the true gradient of its own forward pass would give. That is not
+a derivative of anything; it is effectively a `C`-fold larger learning rate on
+the input embeddings.
+
+The paper's text never specifies the backward pass, so there is no way to
+settle this from the paper alone. Since the published numbers were produced by
+the authors' code, that code is the tiebreaker, and reproduction runs use the
+`sum` rule (`--context-grad`, default `mean`; `REPRO_CONTEXT_GRAD` in
+`scripts/run_experiments.py`).
+
+It matters more than it sounds. Over three seeds, CBOW dim=100 on full text8:
+
+| rule | total accuracy |
+|---|---|
+| `mean` (true gradient) | 4.35% ± 0.18 |
+| `sum` (reference behaviour) | **7.49% ± 0.27** |
+
+This is also why the third pitfall took so long to find. The `sum` rule raises
+gradient norms roughly 4.5x, so under the old fixed clip of 150 it was almost
+entirely clipped away and measured *worse* than `mean` — 3.8% against 4.2%.
+The first conclusion drawn from that was "the reference rule doesn't help,"
+which was exactly backwards: the experiment had measured the clip, not the
+rule. Neither fix is visible without the other.
 
 ## Learning rate schedule
 
