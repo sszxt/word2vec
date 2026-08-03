@@ -1,6 +1,11 @@
 import numpy as np
 
-from word2vec.dataset import generate_cbow_pairs, generate_skipgram_pairs, iterate_batches
+from word2vec.dataset import (
+    generate_cbow_pairs,
+    generate_skipgram_pairs,
+    iterate_batches,
+    subsample_frequent,
+)
 
 
 def test_cbow_pairs_match_manual_window():
@@ -37,6 +42,43 @@ def test_skipgram_more_pairs_with_larger_window():
     _, small = generate_skipgram_pairs(tokens, window=2, rng=rng)
     _, large = generate_skipgram_pairs(tokens, window=8, rng=rng)
     assert len(large) > len(small)
+
+
+def test_subsample_disabled_returns_corpus_unchanged():
+    tokens = np.array([0, 0, 1, 2, 0, 1], dtype=np.int32)
+    rng = np.random.default_rng(0)
+    assert np.array_equal(subsample_frequent(tokens, 0.0, rng), tokens)
+
+
+def test_subsample_drops_frequent_words_and_keeps_rare_ones():
+    # word 0 is 90% of the corpus; word 1 appears once in 1000.
+    tokens = np.concatenate([np.zeros(9000, dtype=np.int32), np.arange(1, 1001, dtype=np.int32)])
+    rng = np.random.default_rng(0)
+    kept = subsample_frequent(tokens, sample=1e-3, rng=rng)
+
+    kept_frequent = (kept == 0).sum()
+    assert kept_frequent < 9000, "the dominant word should be thinned"
+
+    # rare words sit far below the threshold, so P_keep saturates at 1.0
+    rare_before = (tokens >= 1).sum()
+    rare_after = (kept >= 1).sum()
+    assert rare_after == rare_before
+
+    # and the frequent word's share of the corpus must fall
+    assert (kept == 0).mean() < (tokens == 0).mean()
+
+
+def test_subsample_preserves_corpus_order():
+    tokens = np.tile(np.arange(50, dtype=np.int32), 40)
+    rng = np.random.default_rng(3)
+    kept = subsample_frequent(tokens, sample=1e-2, rng=rng)
+    # every surviving token must still be a subsequence of the original
+    assert len(kept) <= len(tokens)
+    idx = 0
+    for value in kept:
+        while tokens[idx] != value:
+            idx += 1
+        idx += 1
 
 
 def test_iterate_batches_covers_all_examples_without_repeats():

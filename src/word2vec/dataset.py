@@ -13,6 +13,44 @@ from __future__ import annotations
 import numpy as np
 
 
+def subsample_frequent(
+    token_ids: np.ndarray, sample: float, rng: np.random.Generator
+) -> np.ndarray:
+    """Randomly discard frequent words, keeping the corpus in order.
+
+    NOT from the paper this repository reproduces. Subsampling comes from the
+    immediate follow-up (Mikolov et al., "Distributed Representations of Words
+    and Phrases and their Compositionality", NIPS 2013) and is off by default;
+    it is included only to measure how much of the remaining gap to reference
+    implementations it accounts for.
+
+    Uses the keep-probability from the reference `word2vec.c`:
+
+        P_keep(w) = sqrt(t / f(w)) + t / f(w)
+
+    where f(w) is the word's corpus frequency and `t` is `sample`. The paper's
+    own text states the simpler `P_discard = 1 - sqrt(t/f)`, i.e. without the
+    trailing `t/f` term; the code adds it, which keeps slightly more of the
+    mid-frequency words. Words rarer than `t` are always kept.
+
+    Discarding happens before pair generation, so removing a token also pulls
+    distant words into each other's windows -- the widened context is part of
+    the effect, not a side effect.
+    """
+    if sample <= 0:
+        return token_ids
+
+    counts = np.bincount(token_ids)
+    freq = counts / counts.sum()
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        ratio = np.where(freq > 0, sample / freq, np.inf)
+    keep_prob = np.minimum(np.sqrt(ratio) + ratio, 1.0)
+
+    keep = rng.random(len(token_ids)) < keep_prob[token_ids]
+    return token_ids[keep]
+
+
 def generate_cbow_pairs(token_ids: np.ndarray, window: int) -> tuple[np.ndarray, np.ndarray]:
     """Fixed symmetric window, matching the paper's "N history + N future" CBOW.
 

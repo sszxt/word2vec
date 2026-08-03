@@ -21,7 +21,12 @@ import numpy as np
 import torch
 
 from word2vec._progress import LogProgress
-from word2vec.dataset import generate_cbow_pairs, generate_skipgram_pairs, iterate_batches
+from word2vec.dataset import (
+    generate_cbow_pairs,
+    generate_skipgram_pairs,
+    iterate_batches,
+    subsample_frequent,
+)
 from word2vec.huffman import build_huffman_tree
 from word2vec.models import CBOWModel, SkipGramModel
 from word2vec.vocab import Vocab, read_tokens
@@ -78,6 +83,7 @@ def train(
     out_path: Path,
     grad_clip_norm: float | None = None,
     context_grad: str = "mean",
+    sample: float = 0.0,
 ) -> dict:
     if window is None:
         window = 4 if arch == "cbow" else 10
@@ -96,6 +102,13 @@ def train(
     if max_words is not None:
         tokens = tokens[:max_words]
     token_ids = np.array(vocab.encode(tokens), dtype=np.int32)
+    if sample > 0:
+        before = len(token_ids)
+        token_ids = subsample_frequent(token_ids, sample, rng)
+        print(
+            f"subsampling (t={sample:g}): {before:,} -> {len(token_ids):,} tokens "
+            f"({100 * len(token_ids) / before:.1f}% kept)"
+        )
     print(
         f"training tokens: {len(token_ids):,}  vocab: {len(vocab):,}  arch: {arch}  dim: {dim}"
         f"  batch: {batch_size}  grad_clip: {grad_clip_norm:.0f}"
@@ -188,6 +201,7 @@ def train(
         "context_grad": context_grad if arch == "cbow" else None,
         "batch_size": batch_size,
         "grad_clip_norm": grad_clip_norm,
+        "sample": sample,
     }
     torch.save(checkpoint, out_path)
     print(f"saved to {out_path}")
@@ -222,6 +236,13 @@ def main():
         help="CBOW only: how gradient reaches context words. 'mean' is the true "
         "gradient; 'sum' reproduces reference word2vec.c (see models.CBOWModel)",
     )
+    parser.add_argument(
+        "--sample",
+        type=float,
+        default=0.0,
+        help="frequent-word subsampling threshold (e.g. 1e-4); 0 disables. "
+        "NOT from this paper -- see dataset.subsample_frequent",
+    )
     args = parser.parse_args()
 
     train(
@@ -240,6 +261,7 @@ def main():
         out_path=args.out,
         grad_clip_norm=args.grad_clip,
         context_grad=args.context_grad,
+        sample=args.sample,
     )
 
 

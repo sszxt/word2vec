@@ -131,10 +131,14 @@ the correct vector arithmetic answer is known exactly).
   qualitative trends (more data helps, Skip-gram wins on semantics, etc.)
   hold at this smaller scale too -- see `docs/06-results.md` for exactly
   where the small-scale results agree and disagree with the paper's tables.
-- **Negative sampling and frequent-word subsampling.** Both are from the
-  immediate follow-up paper (Mikolov et al., NIPS 2013), not this one. This
-  repository implements only what Section 2-3 of *this* paper describes:
-  hierarchical softmax over a Huffman tree.
+- **Negative sampling.** From the immediate follow-up paper (Mikolov et al.,
+  NIPS 2013), not this one. The reproduction implements only what Sections
+  2-3 of *this* paper describe: hierarchical softmax over a Huffman tree.
+- **Frequent-word subsampling** is also from that follow-up paper, so it is
+  **off by default** and excluded from every reproduction result. It is
+  implemented behind `--sample` purely to measure how much of the remaining
+  gap to reference implementations it explains -- which turns out to be a
+  lot. See `docs/06-results.md`.
 - **Distributed training (DistBelief).** Section 2.3's multi-replica
   parameter-server setup isn't reproduced; this is single-machine,
   single-GPU minibatch SGD instead (see `docs/04-training.md` for why that's
