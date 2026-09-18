@@ -1,10 +1,12 @@
-"""CBOW and Skip-gram, both trained with hierarchical softmax (docs/03).
+"""CBOW and Skip-gram, trained with hierarchical softmax (docs/03) or negative
+sampling (docs/07).
 
 Both models reduce to the same two steps:
   1. produce a single "input vector" per training example (CBOW: the mean of
      the context word vectors; Skip-gram: the center word's own vector)
-  2. score that input vector against a target word's Huffman tree path via
-     HierarchicalSoftmax
+  2. score that input vector against a target word via one of two loss
+     modules: `HierarchicalSoftmax` (the target's Huffman tree path) or
+     `NegativeSampling` (the target plus a few sampled noise words)
 
 The path/code lookup is precomputed once for the whole vocabulary as padded
 tensors (`_PaddedTree`), so a training step is pure tensor indexing + matmul
@@ -72,6 +74,47 @@ class HierarchicalSoftmax(nn.Module):
         return per_example_loss.mean()
 
 
+class NegativeSampling(nn.Module):
+    """Negative sampling (Mikolov et al., NIPS 2013 follow-up), an alternative
+    to hierarchical softmax's tree-structured loss (docs/03).
+
+    Score the target word directly against `negative` noise words drawn from
+    the unigram distribution raised to the 3/4 power -- word2vec.c's own
+    choice, which flattens the distribution so rare words are sampled more
+    often than raw frequency would give them. word2vec.c builds this
+    distribution once into a fixed-size lookup table for O(1) sampling in
+    single-threaded C; `torch.multinomial` draws the same distribution
+    directly and vectorizes over the whole batch, so no table is needed here.
+    """
+
+    def __init__(self, counts: list[int], embed_dim: int, negative: int = 5, power: float = 0.75):
+        super().__init__()
+        self.out_embeddings = nn.Embedding(len(counts), embed_dim)
+        nn.init.zeros_(self.out_embeddings.weight)
+        weights = torch.tensor(counts, dtype=torch.float64).pow(power)
+        self.register_buffer("noise_dist", (weights / weights.sum()).float())
+        self.negative = negative
+
+    def forward(self, input_vectors: torch.Tensor, target_ids: torch.Tensor) -> torch.Tensor:
+        """input_vectors: (batch, D). target_ids: (batch,). Returns mean loss."""
+        batch = input_vectors.shape[0]
+        pos_vecs = self.out_embeddings(target_ids)  # (batch, D)
+        pos_score = (input_vectors * pos_vecs).sum(dim=1)  # (batch,)
+
+        # A noise word landing on the batch's own target is left in rather
+        # than resampled, as word2vec.c does: at vocab sizes in the tens of
+        # thousands the collision rate (~negative/V per example) is too low
+        # to measurably affect the loss.
+        noise_ids = torch.multinomial(
+            self.noise_dist, batch * self.negative, replacement=True
+        ).view(batch, self.negative)
+        neg_vecs = self.out_embeddings(noise_ids)  # (batch, negative, D)
+        neg_score = torch.einsum("bd,bnd->bn", input_vectors, neg_vecs)  # (batch, negative)
+
+        per_example_loss = -(F.logsigmoid(pos_score) + F.logsigmoid(-neg_score).sum(dim=1))
+        return per_example_loss.mean()
+
+
 class _ScaleGrad(torch.autograd.Function):
     """Identity forward, gradient scaled by `scale` on the way back."""
 
@@ -86,11 +129,23 @@ class _ScaleGrad(torch.autograd.Function):
 
 
 class _EmbeddingBase(nn.Module):
-    def __init__(self, vocab_size: int, embed_dim: int, tree: HuffmanTree, device: torch.device):
+    def __init__(
+        self,
+        vocab_size: int,
+        embed_dim: int,
+        tree: HuffmanTree | None = None,
+        device: torch.device | None = None,
+        *,
+        loss_fn: nn.Module | None = None,
+    ):
         super().__init__()
         self.in_embeddings = nn.Embedding(vocab_size, embed_dim)
         nn.init.uniform_(self.in_embeddings.weight, -0.5 / embed_dim, 0.5 / embed_dim)
-        self.loss_fn = HierarchicalSoftmax(tree, embed_dim, device)
+        if loss_fn is None:
+            if tree is None or device is None:
+                raise ValueError("pass `loss_fn`, or both `tree` and `device` for hierarchical softmax")
+            loss_fn = HierarchicalSoftmax(tree, embed_dim, device)
+        self.loss_fn = loss_fn
 
     def word_vectors(self) -> torch.Tensor:
         return self.in_embeddings.weight.detach()

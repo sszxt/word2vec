@@ -28,7 +28,7 @@ from word2vec.dataset import (
     subsample_frequent,
 )
 from word2vec.huffman import build_huffman_tree
-from word2vec.models import CBOWModel, SkipGramModel
+from word2vec.models import CBOWModel, NegativeSampling, SkipGramModel
 from word2vec.vocab import Vocab, read_tokens
 
 
@@ -84,6 +84,8 @@ def train(
     grad_clip_norm: float | None = None,
     context_grad: str = "mean",
     sample: float = 0.0,
+    loss: str = "hs",
+    negative: int = 5,
 ) -> dict:
     if window is None:
         window = 4 if arch == "cbow" else 10
@@ -111,14 +113,21 @@ def train(
         )
     print(
         f"training tokens: {len(token_ids):,}  vocab: {len(vocab):,}  arch: {arch}  dim: {dim}"
-        f"  batch: {batch_size}  grad_clip: {grad_clip_norm:.0f}"
+        f"  loss: {loss}  batch: {batch_size}  grad_clip: {grad_clip_norm:.0f}"
     )
 
-    tree = build_huffman_tree(vocab.counts)
-    if arch == "cbow":
-        model = CBOWModel(len(vocab), dim, tree, device, context_grad=context_grad)
+    if loss == "hs":
+        tree = build_huffman_tree(vocab.counts)
+        model_kwargs = {"tree": tree, "device": device}
+    elif loss == "ns":
+        model_kwargs = {"loss_fn": NegativeSampling(vocab.counts, dim, negative=negative)}
     else:
-        model = SkipGramModel(len(vocab), dim, tree, device)
+        raise ValueError(f"loss must be 'hs' or 'ns', got {loss!r}")
+
+    if arch == "cbow":
+        model = CBOWModel(len(vocab), dim, context_grad=context_grad, **model_kwargs)
+    else:
+        model = SkipGramModel(len(vocab), dim, **model_kwargs)
     model = model.to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=lr)
 
@@ -202,6 +211,8 @@ def train(
         "batch_size": batch_size,
         "grad_clip_norm": grad_clip_norm,
         "sample": sample,
+        "loss": loss,
+        "negative": negative if loss == "ns" else None,
     }
     torch.save(checkpoint, out_path)
     print(f"saved to {out_path}")
@@ -243,6 +254,19 @@ def main():
         help="frequent-word subsampling threshold (e.g. 1e-4); 0 disables. "
         "NOT from this paper -- see dataset.subsample_frequent",
     )
+    parser.add_argument(
+        "--loss",
+        choices=["hs", "ns"],
+        default="hs",
+        help="hs: hierarchical softmax (this paper). ns: negative sampling "
+        "(NIPS 2013 follow-up) -- see models.NegativeSampling, docs/07",
+    )
+    parser.add_argument(
+        "--negative",
+        type=int,
+        default=5,
+        help="noise words per target, --loss ns only",
+    )
     args = parser.parse_args()
 
     train(
@@ -262,6 +286,8 @@ def main():
         grad_clip_norm=args.grad_clip,
         context_grad=args.context_grad,
         sample=args.sample,
+        loss=args.loss,
+        negative=args.negative,
     )
 
 
