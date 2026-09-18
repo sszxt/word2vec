@@ -27,6 +27,7 @@ confidently wrong conclusion.
 | [`docs/04-training.md`](docs/04-training.md) | SGD schedule, batching, three real bugs hit while reproducing this, and CBOW's unspecified backward pass |
 | [`docs/05-evaluation-task.md`](docs/05-evaluation-task.md) | The analogy task (3CosAdd) and vocabulary coverage |
 | [`docs/06-results.md`](docs/06-results.md) | Full results, compared point-by-point against the paper's tables |
+| [`docs/07-negative-sampling.md`](docs/07-negative-sampling.md) | Negative sampling as an alternative loss, and cross-validation against gensim |
 
 ## Results at a glance
 
@@ -54,7 +55,7 @@ src/word2vec/     library code
   vocab.py           vocabulary + frequency counting
   huffman.py         Huffman tree for hierarchical softmax
   dataset.py         CBOW / Skip-gram training pair generation
-  models.py          CBOW and Skip-gram models, hierarchical softmax loss
+  models.py          CBOW and Skip-gram models; hierarchical softmax and negative sampling losses
   train.py           training loop (SGD, linear LR decay, gradient clipping)
   evaluate.py        analogy evaluation (3CosAdd)
 scripts/          CLI entry points (download data, train, evaluate, nearest neighbours, run the full experiment suite)
@@ -99,6 +100,11 @@ derivative, `sum` reproduces reference `word2vec.c` and is what the
 experiment suite uses), and `--grad-clip` overrides a clipping threshold
 that otherwise scales with batch size.
 
+`--loss {hs,ns}` switches between hierarchical softmax (the paper's own
+method, default) and negative sampling (`--negative` sets noise-word count),
+documented in [`docs/07-negative-sampling.md`](docs/07-negative-sampling.md)
+-- like `--sample`, this is beyond what this paper specifies.
+
 ## Evaluating a checkpoint
 
 ```
@@ -134,6 +140,21 @@ developed against. Note that the interactive tabs search a truncated
 vocabulary using quantized vectors, so accuracy seen there runs well above the
 real benchmark -- the per-category table in its Results tab is computed over
 the full vocabulary and is the number that matters.
+
+## Cross-validating against gensim
+
+```
+pip install -e ".[reference]"
+python scripts/reference_gensim.py --arch cbow --dim 100 --loss ns
+```
+
+text8 is too small for the paper's own numbers to tell a correct
+implementation apart from a subtly broken one (they come from 50-400x more
+data). `scripts/reference_gensim.py` trains gensim -- a well-tested port of
+`word2vec.c` -- with matching hyperparameters on the same corpus and
+vocabulary, and scores both models with our own evaluator, isolating whether
+a gap comes from our implementation rather than from scale. See
+[`docs/07-negative-sampling.md`](docs/07-negative-sampling.md).
 
 ## Reproducing the full experiment suite
 
@@ -171,14 +192,15 @@ the correct vector arithmetic answer is known exactly).
   qualitative trends (more data helps, Skip-gram wins on semantics, etc.)
   hold at this smaller scale too -- see `docs/06-results.md` for exactly
   where the small-scale results agree and disagree with the paper's tables.
-- **Negative sampling.** From the immediate follow-up paper (Mikolov et al.,
-  NIPS 2013), not this one. The reproduction implements only what Sections
-  2-3 of *this* paper describe: hierarchical softmax over a Huffman tree.
-- **Frequent-word subsampling** is also from that follow-up paper, so it is
-  **off by default** and excluded from every reproduction result. It is
-  implemented behind `--sample` purely to measure how much of the remaining
-  gap to reference implementations it explains -- which turns out to be a
-  lot. See `docs/06-results.md`.
+- **Negative sampling and frequent-word subsampling** are both from the
+  immediate follow-up paper (Mikolov et al., NIPS 2013), not this one, so the
+  reproduction itself uses only what Sections 2-3 of *this* paper describe:
+  hierarchical softmax over a Huffman tree, `--sample 0`. Both are
+  implemented and **off by default** -- subsampling behind `--sample`, to
+  measure how much of the remaining gap to reference implementations it
+  explains (a lot, see `docs/06-results.md`); negative sampling behind
+  `--loss ns`, as a second independent loss implementation cross-validated
+  against gensim (`docs/07-negative-sampling.md`).
 - **Distributed training (DistBelief).** Section 2.3's multi-replica
   parameter-server setup isn't reproduced; this is single-machine,
   single-GPU minibatch SGD instead (see `docs/04-training.md` for why that's
