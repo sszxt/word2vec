@@ -14,5 +14,8 @@ dependencies = [
     "requests>=2.31",
 ]
 
+[project.optional-dependencies]
+reference = ["gensim>=4.3"]
+
 [tool.setuptools.packages.find]
 where = ["src"]
