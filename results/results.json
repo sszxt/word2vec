@@ -17,7 +17,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 3.67,
     "syntactic_acc": 4.55,
-    "total_acc": 4.18
+    "total_acc": 4.18,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expA_cbow_d100_full_mean",
@@ -37,7 +39,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 4.09,
     "syntactic_acc": 4.87,
-    "total_acc": 4.54
+    "total_acc": 4.54,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expA_cbow_d100_full_mean",
@@ -57,7 +61,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 3.68,
     "syntactic_acc": 4.81,
-    "total_acc": 4.34
+    "total_acc": 4.34,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expA_cbow_d100_full_sum",
@@ -77,7 +83,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 6.03,
     "syntactic_acc": 8.94,
-    "total_acc": 7.73
+    "total_acc": 7.73,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expA_cbow_d100_full_sum",
@@ -97,7 +105,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 6.0,
     "syntactic_acc": 8.06,
-    "total_acc": 7.2
+    "total_acc": 7.2,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expA_cbow_d100_full_sum",
@@ -117,7 +127,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 6.05,
     "syntactic_acc": 8.6,
-    "total_acc": 7.54
+    "total_acc": 7.54,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expA_skipgram_d100_full",
@@ -137,7 +149,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 14.62,
     "syntactic_acc": 20.29,
-    "total_acc": 17.93
+    "total_acc": 17.93,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expA_skipgram_d100_full",
@@ -157,7 +171,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 15.63,
     "syntactic_acc": 19.92,
-    "total_acc": 18.14
+    "total_acc": 18.14,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expA_skipgram_d100_full",
@@ -177,7 +193,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 16.46,
     "syntactic_acc": 20.04,
-    "total_acc": 18.55
+    "total_acc": 18.55,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d50_2M",
@@ -197,7 +215,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 0.68,
     "syntactic_acc": 0.24,
-    "total_acc": 0.39
+    "total_acc": 0.39,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d50_2M",
@@ -217,7 +237,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 0.49,
     "syntactic_acc": 0.2,
-    "total_acc": 0.29
+    "total_acc": 0.29,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d50_2M",
@@ -237,7 +259,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 0.63,
     "syntactic_acc": 0.1,
-    "total_acc": 0.28
+    "total_acc": 0.28,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d50_4M",
@@ -257,7 +281,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 1.24,
     "syntactic_acc": 0.76,
-    "total_acc": 0.92
+    "total_acc": 0.92,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d50_4M",
@@ -277,7 +303,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 1.27,
     "syntactic_acc": 0.7,
-    "total_acc": 0.89
+    "total_acc": 0.89,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d50_4M",
@@ -297,7 +325,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 1.39,
     "syntactic_acc": 1.02,
-    "total_acc": 1.14
+    "total_acc": 1.14,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d50_8M",
@@ -317,7 +347,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 4.17,
     "syntactic_acc": 3.42,
-    "total_acc": 3.67
+    "total_acc": 3.67,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d50_8M",
@@ -337,7 +369,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 3.58,
     "syntactic_acc": 3.48,
-    "total_acc": 3.51
+    "total_acc": 3.51,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d50_8M",
@@ -357,7 +391,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 3.95,
     "syntactic_acc": 3.78,
-    "total_acc": 3.84
+    "total_acc": 3.84,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d50_full",
@@ -377,7 +413,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 6.92,
     "syntactic_acc": 8.3,
-    "total_acc": 7.84
+    "total_acc": 7.84,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d50_full",
@@ -397,7 +435,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 7.24,
     "syntactic_acc": 8.61,
-    "total_acc": 8.15
+    "total_acc": 8.15,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d50_full",
@@ -417,7 +457,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 7.24,
     "syntactic_acc": 8.62,
-    "total_acc": 8.16
+    "total_acc": 8.16,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d100_2M",
@@ -437,7 +479,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 0.39,
     "syntactic_acc": 0.22,
-    "total_acc": 0.28
+    "total_acc": 0.28,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d100_2M",
@@ -457,7 +501,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 0.24,
     "syntactic_acc": 0.22,
-    "total_acc": 0.23
+    "total_acc": 0.23,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d100_2M",
@@ -477,7 +523,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 0.58,
     "syntactic_acc": 0.29,
-    "total_acc": 0.39
+    "total_acc": 0.39,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d100_4M",
@@ -497,7 +545,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 1.56,
     "syntactic_acc": 0.75,
-    "total_acc": 1.02
+    "total_acc": 1.02,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d100_4M",
@@ -517,7 +567,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 1.19,
     "syntactic_acc": 0.85,
-    "total_acc": 0.96
+    "total_acc": 0.96,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d100_4M",
@@ -537,7 +589,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 1.17,
     "syntactic_acc": 0.69,
-    "total_acc": 0.85
+    "total_acc": 0.85,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d100_8M",
@@ -557,7 +611,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 5.09,
     "syntactic_acc": 3.75,
-    "total_acc": 4.2
+    "total_acc": 4.2,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d100_8M",
@@ -577,7 +633,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 4.14,
     "syntactic_acc": 3.71,
-    "total_acc": 3.86
+    "total_acc": 3.86,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d100_8M",
@@ -597,7 +655,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 4.24,
     "syntactic_acc": 4.2,
-    "total_acc": 4.21
+    "total_acc": 4.21,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d100_full",
@@ -617,7 +677,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 8.09,
     "syntactic_acc": 10.62,
-    "total_acc": 9.77
+    "total_acc": 9.77,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d100_full",
@@ -637,7 +699,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 8.85,
     "syntactic_acc": 10.62,
-    "total_acc": 10.03
+    "total_acc": 10.03,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d100_full",
@@ -657,7 +721,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 9.41,
     "syntactic_acc": 11.22,
-    "total_acc": 10.61
+    "total_acc": 10.61,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d300_2M",
@@ -677,7 +743,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 0.24,
     "syntactic_acc": 0.31,
-    "total_acc": 0.29
+    "total_acc": 0.29,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d300_2M",
@@ -697,7 +765,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 0.34,
     "syntactic_acc": 0.18,
-    "total_acc": 0.24
+    "total_acc": 0.24,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d300_2M",
@@ -717,7 +787,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 0.29,
     "syntactic_acc": 0.18,
-    "total_acc": 0.22
+    "total_acc": 0.22,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d300_4M",
@@ -737,7 +809,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 1.1,
     "syntactic_acc": 0.7,
-    "total_acc": 0.83
+    "total_acc": 0.83,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d300_4M",
@@ -757,7 +831,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 1.27,
     "syntactic_acc": 0.54,
-    "total_acc": 0.78
+    "total_acc": 0.78,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d300_4M",
@@ -777,7 +853,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 1.49,
     "syntactic_acc": 0.78,
-    "total_acc": 1.02
+    "total_acc": 1.02,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d300_8M",
@@ -797,7 +875,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 4.17,
     "syntactic_acc": 3.0,
-    "total_acc": 3.39
+    "total_acc": 3.39,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d300_8M",
@@ -817,7 +897,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 3.85,
     "syntactic_acc": 3.55,
-    "total_acc": 3.65
+    "total_acc": 3.65,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d300_8M",
@@ -837,7 +919,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 4.07,
     "syntactic_acc": 3.76,
-    "total_acc": 3.86
+    "total_acc": 3.86,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d300_full",
@@ -857,7 +941,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 8.77,
     "syntactic_acc": 10.72,
-    "total_acc": 10.07
+    "total_acc": 10.07,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d300_full",
@@ -877,7 +963,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 9.02,
     "syntactic_acc": 10.47,
-    "total_acc": 9.99
+    "total_acc": 9.99,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expB_cbow_d300_full",
@@ -897,7 +985,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 10.41,
     "syntactic_acc": 11.27,
-    "total_acc": 10.98
+    "total_acc": 10.98,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expC_skipgram_d50_full",
@@ -917,7 +1007,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 10.44,
     "syntactic_acc": 14.37,
-    "total_acc": 12.73
+    "total_acc": 12.73,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expC_skipgram_d50_full",
@@ -937,7 +1029,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 10.69,
     "syntactic_acc": 14.64,
-    "total_acc": 13.0
+    "total_acc": 13.0,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expC_skipgram_d50_full",
@@ -957,7 +1051,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 11.41,
     "syntactic_acc": 14.87,
-    "total_acc": 13.43
+    "total_acc": 13.43,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expC_skipgram_d100_full",
@@ -977,7 +1073,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 14.62,
     "syntactic_acc": 20.29,
-    "total_acc": 17.93
+    "total_acc": 17.93,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expC_skipgram_d100_full",
@@ -997,7 +1095,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 15.63,
     "syntactic_acc": 19.92,
-    "total_acc": 18.14
+    "total_acc": 18.14,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expC_skipgram_d100_full",
@@ -1017,7 +1117,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 16.46,
     "syntactic_acc": 20.04,
-    "total_acc": 18.55
+    "total_acc": 18.55,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expC_skipgram_d300_full",
@@ -1037,7 +1139,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 15.41,
     "syntactic_acc": 21.9,
-    "total_acc": 19.2
+    "total_acc": 19.2,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expC_skipgram_d300_full",
@@ -1057,7 +1161,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 16.33,
     "syntactic_acc": 20.82,
-    "total_acc": 18.95
+    "total_acc": 18.95,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expC_skipgram_d300_full",
@@ -1077,7 +1183,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 16.21,
     "syntactic_acc": 21.75,
-    "total_acc": 19.44
+    "total_acc": 19.44,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_2M_e1",
@@ -1097,7 +1205,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 0.39,
     "syntactic_acc": 0.22,
-    "total_acc": 0.28
+    "total_acc": 0.28,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_2M_e1",
@@ -1117,7 +1227,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 0.24,
     "syntactic_acc": 0.22,
-    "total_acc": 0.23
+    "total_acc": 0.23,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_2M_e1",
@@ -1137,7 +1249,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 0.58,
     "syntactic_acc": 0.29,
-    "total_acc": 0.39
+    "total_acc": 0.39,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_2M_e2",
@@ -1157,7 +1271,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 0.9,
     "syntactic_acc": 0.55,
-    "total_acc": 0.67
+    "total_acc": 0.67,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_2M_e2",
@@ -1177,7 +1293,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 1.1,
     "syntactic_acc": 0.58,
-    "total_acc": 0.75
+    "total_acc": 0.75,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_2M_e2",
@@ -1197,7 +1315,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 1.44,
     "syntactic_acc": 0.59,
-    "total_acc": 0.87
+    "total_acc": 0.87,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_2M_e3",
@@ -1217,7 +1337,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 2.02,
     "syntactic_acc": 1.26,
-    "total_acc": 1.52
+    "total_acc": 1.52,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_2M_e3",
@@ -1237,7 +1359,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 2.07,
     "syntactic_acc": 1.19,
-    "total_acc": 1.48
+    "total_acc": 1.48,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_2M_e3",
@@ -1257,7 +1381,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 1.8,
     "syntactic_acc": 1.03,
-    "total_acc": 1.29
+    "total_acc": 1.29,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_4M_e1",
@@ -1277,7 +1403,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 1.56,
     "syntactic_acc": 0.75,
-    "total_acc": 1.02
+    "total_acc": 1.02,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_4M_e1",
@@ -1297,7 +1425,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 1.19,
     "syntactic_acc": 0.85,
-    "total_acc": 0.96
+    "total_acc": 0.96,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_4M_e1",
@@ -1317,7 +1447,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 1.17,
     "syntactic_acc": 0.69,
-    "total_acc": 0.85
+    "total_acc": 0.85,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_4M_e2",
@@ -1337,7 +1469,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 3.24,
     "syntactic_acc": 2.87,
-    "total_acc": 2.99
+    "total_acc": 2.99,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_4M_e2",
@@ -1357,7 +1491,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 3.05,
     "syntactic_acc": 2.6,
-    "total_acc": 2.75
+    "total_acc": 2.75,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_4M_e2",
@@ -1377,7 +1513,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 3.19,
     "syntactic_acc": 3.03,
-    "total_acc": 3.08
+    "total_acc": 3.08,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_4M_e3",
@@ -1397,7 +1535,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 4.95,
     "syntactic_acc": 4.48,
-    "total_acc": 4.64
+    "total_acc": 4.64,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_4M_e3",
@@ -1417,7 +1557,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 4.97,
     "syntactic_acc": 4.61,
-    "total_acc": 4.73
+    "total_acc": 4.73,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_4M_e3",
@@ -1437,7 +1579,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 4.75,
     "syntactic_acc": 4.59,
-    "total_acc": 4.65
+    "total_acc": 4.65,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_8M_e1",
@@ -1457,7 +1601,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 5.09,
     "syntactic_acc": 3.75,
-    "total_acc": 4.2
+    "total_acc": 4.2,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_8M_e1",
@@ -1477,7 +1623,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 4.14,
     "syntactic_acc": 3.71,
-    "total_acc": 3.86
+    "total_acc": 3.86,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_8M_e1",
@@ -1497,7 +1645,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 4.24,
     "syntactic_acc": 4.2,
-    "total_acc": 4.21
+    "total_acc": 4.21,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_8M_e2",
@@ -1517,7 +1667,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 8.19,
     "syntactic_acc": 8.82,
-    "total_acc": 8.61
+    "total_acc": 8.61,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_8M_e2",
@@ -1537,7 +1689,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 7.04,
     "syntactic_acc": 9.28,
-    "total_acc": 8.53
+    "total_acc": 8.53,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_8M_e2",
@@ -1557,7 +1711,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 7.21,
     "syntactic_acc": 9.21,
-    "total_acc": 8.54
+    "total_acc": 8.54,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_8M_e3",
@@ -1577,7 +1733,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 9.6,
     "syntactic_acc": 12.03,
-    "total_acc": 11.22
+    "total_acc": 11.22,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_8M_e3",
@@ -1597,7 +1755,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 9.7,
     "syntactic_acc": 12.69,
-    "total_acc": 11.69
+    "total_acc": 11.69,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expD_cbow_d100_8M_e3",
@@ -1617,7 +1777,9 @@
     "questions_skipped_oov": 7276,
     "semantic_acc": 8.94,
     "syntactic_acc": 12.48,
-    "total_acc": 11.3
+    "total_acc": 11.3,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expE_cbow_d100_full_sample1e-3",
@@ -1637,7 +1799,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 9.83,
     "syntactic_acc": 13.23,
-    "total_acc": 11.81
+    "total_acc": 11.81,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expE_cbow_d100_full_sample1e-3",
@@ -1657,7 +1821,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 9.9,
     "syntactic_acc": 12.8,
-    "total_acc": 11.59
+    "total_acc": 11.59,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expE_cbow_d100_full_sample1e-3",
@@ -1677,7 +1843,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 8.78,
     "syntactic_acc": 13.2,
-    "total_acc": 11.36
+    "total_acc": 11.36,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expE_skipgram_d100_full_sample1e-3",
@@ -1697,7 +1865,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 18.8,
     "syntactic_acc": 20.72,
-    "total_acc": 19.92
+    "total_acc": 19.92,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expE_skipgram_d100_full_sample1e-3",
@@ -1717,7 +1887,9 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 18.68,
     "syntactic_acc": 20.75,
-    "total_acc": 19.89
+    "total_acc": 19.89,
+    "loss": "hs",
+    "negative": ""
   },
   {
     "name": "expE_skipgram_d100_full_sample1e-3",
@@ -1737,6 +1909,140 @@
     "questions_skipped_oov": 1717,
     "semantic_acc": 18.68,
     "syntactic_acc": 20.58,
-    "total_acc": 19.79
+    "total_acc": 19.79,
+    "loss": "hs",
+    "negative": ""
+  },
+  {
+    "name": "expF_cbow_d100_full_ns",
+    "seed": 0,
+    "arch": "cbow",
+    "dim": 100,
+    "window": 4,
+    "context_grad": "sum",
+    "sample": 0.001,
+    "loss": "ns",
+    "negative": 5,
+    "vocab_size": 71290,
+    "train_tokens": 12505839,
+    "epochs": 1,
+    "batch_size": 2048,
+    "grad_clip_norm": 675.0,
+    "train_seconds": 8.8,
+    "questions_evaluated": 17827,
+    "questions_skipped_oov": 1717,
+    "semantic_acc": 3.68,
+    "syntactic_acc": 7.64,
+    "total_acc": 5.99
+  },
+  {
+    "name": "expF_cbow_d100_full_ns",
+    "seed": 1,
+    "arch": "cbow",
+    "dim": 100,
+    "window": 4,
+    "context_grad": "sum",
+    "sample": 0.001,
+    "loss": "ns",
+    "negative": 5,
+    "vocab_size": 71290,
+    "train_tokens": 12506807,
+    "epochs": 1,
+    "batch_size": 2048,
+    "grad_clip_norm": 675.0,
+    "train_seconds": 8.4,
+    "questions_evaluated": 17827,
+    "questions_skipped_oov": 1717,
+    "semantic_acc": 3.2,
+    "syntactic_acc": 7.49,
+    "total_acc": 5.7
+  },
+  {
+    "name": "expF_cbow_d100_full_ns",
+    "seed": 2,
+    "arch": "cbow",
+    "dim": 100,
+    "window": 4,
+    "context_grad": "sum",
+    "sample": 0.001,
+    "loss": "ns",
+    "negative": 5,
+    "vocab_size": 71290,
+    "train_tokens": 12505249,
+    "epochs": 1,
+    "batch_size": 2048,
+    "grad_clip_norm": 675.0,
+    "train_seconds": 8.4,
+    "questions_evaluated": 17827,
+    "questions_skipped_oov": 1717,
+    "semantic_acc": 2.79,
+    "syntactic_acc": 7.42,
+    "total_acc": 5.49
+  },
+  {
+    "name": "expF_skipgram_d100_full_ns",
+    "seed": 0,
+    "arch": "skipgram",
+    "dim": 100,
+    "window": 10,
+    "context_grad": "",
+    "sample": 0.001,
+    "loss": "ns",
+    "negative": 5,
+    "vocab_size": 71290,
+    "train_tokens": 12505839,
+    "epochs": 1,
+    "batch_size": 2048,
+    "grad_clip_norm": 150.0,
+    "train_seconds": 84.5,
+    "questions_evaluated": 17827,
+    "questions_skipped_oov": 1717,
+    "semantic_acc": 9.36,
+    "syntactic_acc": 20.24,
+    "total_acc": 15.71
+  },
+  {
+    "name": "expF_skipgram_d100_full_ns",
+    "seed": 1,
+    "arch": "skipgram",
+    "dim": 100,
+    "window": 10,
+    "context_grad": "",
+    "sample": 0.001,
+    "loss": "ns",
+    "negative": 5,
+    "vocab_size": 71290,
+    "train_tokens": 12506807,
+    "epochs": 1,
+    "batch_size": 2048,
+    "grad_clip_norm": 150.0,
+    "train_seconds": 84.6,
+    "questions_evaluated": 17827,
+    "questions_skipped_oov": 1717,
+    "semantic_acc": 10.34,
+    "syntactic_acc": 20.65,
+    "total_acc": 16.36
+  },
+  {
+    "name": "expF_skipgram_d100_full_ns",
+    "seed": 2,
+    "arch": "skipgram",
+    "dim": 100,
+    "window": 10,
+    "context_grad": "",
+    "sample": 0.001,
+    "loss": "ns",
+    "negative": 5,
+    "vocab_size": 71290,
+    "train_tokens": 12505249,
+    "epochs": 1,
+    "batch_size": 2048,
+    "grad_clip_norm": 150.0,
+    "train_seconds": 84.2,
+    "questions_evaluated": 17827,
+    "questions_skipped_oov": 1717,
+    "semantic_acc": 10.19,
+    "syntactic_acc": 20.08,
+    "total_acc": 15.97
   }
 ]

@@ -27,6 +27,11 @@ Experiment E is explicitly NOT part of the reproduction: frequent-word
 subsampling comes from the NIPS 2013 follow-up paper. It is reported
 separately so its contribution can be seen without contaminating the
 reproduction results above.
+
+Experiment F is also not part of the reproduction: negative sampling is from
+that same follow-up. It uses Experiment E's exact settings (sample=1e-3) with
+loss="ns" instead of hierarchical softmax, isolating the loss function as the
+only variable between the two rows.
 """
 
 import argparse
@@ -82,6 +87,8 @@ def run_one(name: str, seed: int, keep_checkpoint: bool, **train_kwargs) -> dict
         "window": ckpt["window"],
         "context_grad": ckpt["context_grad"] or "",
         "sample": ckpt["sample"],
+        "loss": ckpt["loss"],
+        "negative": ckpt["negative"] or "",
         "vocab_size": len(id2word),
         "train_tokens": ckpt["train_tokens"],
         "epochs": ckpt["epochs"],
@@ -121,8 +128,8 @@ def summarize(rows: list[dict]) -> list[dict]:
     for name, group in by_name.items():
         entry = {
             k: group[0][k]
-            for k in ("name", "arch", "dim", "context_grad", "sample", "vocab_size",
-                      "train_tokens", "epochs")
+            for k in ("name", "arch", "dim", "context_grad", "sample", "loss", "negative",
+                      "vocab_size", "train_tokens", "epochs")
         }
         entry["n_seeds"] = len(group)
         for metric in ("semantic_acc", "syntactic_acc", "total_acc"):
@@ -136,6 +143,9 @@ def summarize(rows: list[dict]) -> list[dict]:
     return summary
 
 
+EXPERIMENTS = "ABCDEF"
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--seeds", type=int, default=3, help="seeds per configuration")
@@ -146,7 +156,18 @@ def main():
         help="override seed count for the expensive full-data Skip-gram sweeps "
         "(default: same as --seeds)",
     )
+    parser.add_argument(
+        "--only",
+        default=EXPERIMENTS,
+        help=f"which experiments to (re)run, e.g. F (default: all of {EXPERIMENTS}). "
+        "Rows from experiments not selected are kept from the existing results files.",
+    )
     args = parser.parse_args()
+
+    only = set(args.only.upper())
+    unknown = only - set(EXPERIMENTS)
+    if unknown:
+        parser.error(f"unknown experiments: {sorted(unknown)} (valid: {EXPERIMENTS})")
 
     seeds = list(range(args.seeds))
     sg_seeds = list(range(args.skipgram_seeds if args.skipgram_seeds is not None else args.seeds))
@@ -155,56 +176,87 @@ def main():
 
     CKPT_DIR.mkdir(parents=True, exist_ok=True)
     base = dict(window=None, batch_size=2048, lr=0.025, grad_clip_norm=None, sample=0.0)
-    rows = []
+
+    # rows from experiments not being (re)run today are carried over unchanged.
+    # Rows recorded before --loss/--negative existed are backfilled as "hs",
+    # which is what they were actually trained with.
+    results_json = Path("results/results.json")
+    previous = json.loads(results_json.read_text(encoding="utf-8")) if results_json.exists() else []
+    for r in previous:
+        r.setdefault("loss", "hs")
+        r.setdefault("negative", "")
+    rows = [r for r in previous if r["name"][3] not in only]
+    if len(rows) < len(previous):
+        print(f"keeping {len(rows)} rows from experiments not in --only={args.only}")
+
+    non_sample_base = {k: v for k, v in base.items() if k != "sample"}
 
     # --- Experiment A: architecture comparison ---
-    for context_grad in ("mean", "sum"):
-        rows += run_config(
-            f"expA_cbow_d100_full_{context_grad}", seeds, arch="cbow", dim=100, epochs=1,
-            max_words=None, vocab_size=None, context_grad=context_grad, **base
-        )
-    rows += run_config(
-        "expA_skipgram_d100_full", sg_seeds, arch="skipgram", dim=100, epochs=1,
-        max_words=None, vocab_size=None, context_grad="mean", **base
-    )
-
-    # --- Experiment B: CBOW, 30k vocab, dim x data-amount grid ---
-    for dim in (50, 100, 300):
-        for max_words in (2_000_000, 4_000_000, 8_000_000, None):
-            tag = f"{max_words // 1_000_000}M" if max_words else "full"
+    if "A" in only:
+        for context_grad in ("mean", "sum"):
             rows += run_config(
-                f"expB_cbow_d{dim}_{tag}", seeds, arch="cbow", dim=dim, epochs=1,
-                max_words=max_words, vocab_size=30_000, context_grad=REPRO_CONTEXT_GRAD, **base
+                f"expA_cbow_d100_full_{context_grad}", seeds, arch="cbow", dim=100, epochs=1,
+                max_words=None, vocab_size=None, context_grad=context_grad, **base
             )
-
-    # --- Experiment C: Skip-gram dimensionality sweep ---
-    for dim in (50, 100, 300):
         rows += run_config(
-            f"expC_skipgram_d{dim}_full", sg_seeds, arch="skipgram", dim=dim, epochs=1,
+            "expA_skipgram_d100_full", sg_seeds, arch="skipgram", dim=100, epochs=1,
             max_words=None, vocab_size=None, context_grad="mean", **base
         )
 
-    # --- Experiment D: epochs x data amount ---
-    for max_words in (2_000_000, 4_000_000, 8_000_000):
-        for epochs in (1, 2, 3):
-            tag = f"{max_words // 1_000_000}M"
+    # --- Experiment B: CBOW, 30k vocab, dim x data-amount grid ---
+    if "B" in only:
+        for dim in (50, 100, 300):
+            for max_words in (2_000_000, 4_000_000, 8_000_000, None):
+                tag = f"{max_words // 1_000_000}M" if max_words else "full"
+                rows += run_config(
+                    f"expB_cbow_d{dim}_{tag}", seeds, arch="cbow", dim=dim, epochs=1,
+                    max_words=max_words, vocab_size=30_000, context_grad=REPRO_CONTEXT_GRAD, **base
+                )
+
+    # --- Experiment C: Skip-gram dimensionality sweep ---
+    if "C" in only:
+        for dim in (50, 100, 300):
             rows += run_config(
-                f"expD_cbow_d100_{tag}_e{epochs}", seeds, arch="cbow", dim=100, epochs=epochs,
-                max_words=max_words, vocab_size=30_000, context_grad=REPRO_CONTEXT_GRAD, **base
+                f"expC_skipgram_d{dim}_full", sg_seeds, arch="skipgram", dim=dim, epochs=1,
+                max_words=None, vocab_size=None, context_grad="mean", **base
             )
 
+    # --- Experiment D: epochs x data amount ---
+    if "D" in only:
+        for max_words in (2_000_000, 4_000_000, 8_000_000):
+            for epochs in (1, 2, 3):
+                tag = f"{max_words // 1_000_000}M"
+                rows += run_config(
+                    f"expD_cbow_d100_{tag}_e{epochs}", seeds, arch="cbow", dim=100, epochs=epochs,
+                    max_words=max_words, vocab_size=30_000, context_grad=REPRO_CONTEXT_GRAD, **base
+                )
+
     # --- Experiment E: beyond the paper -- frequent-word subsampling ---
-    non_sample_base = {k: v for k, v in base.items() if k != "sample"}
-    rows += run_config(
-        "expE_cbow_d100_full_sample1e-3", seeds, arch="cbow", dim=100, epochs=1,
-        max_words=None, vocab_size=None, context_grad=REPRO_CONTEXT_GRAD,
-        sample=1e-3, **non_sample_base
-    )
-    rows += run_config(
-        "expE_skipgram_d100_full_sample1e-3", sg_seeds, arch="skipgram", dim=100, epochs=1,
-        max_words=None, vocab_size=None, context_grad="mean",
-        sample=1e-3, **non_sample_base
-    )
+    if "E" in only:
+        rows += run_config(
+            "expE_cbow_d100_full_sample1e-3", seeds, arch="cbow", dim=100, epochs=1,
+            max_words=None, vocab_size=None, context_grad=REPRO_CONTEXT_GRAD,
+            sample=1e-3, **non_sample_base
+        )
+        rows += run_config(
+            "expE_skipgram_d100_full_sample1e-3", sg_seeds, arch="skipgram", dim=100, epochs=1,
+            max_words=None, vocab_size=None, context_grad="mean",
+            sample=1e-3, **non_sample_base
+        )
+
+    # --- Experiment F: beyond the paper -- negative sampling ---
+    # Same settings as Experiment E, loss="ns" instead of hierarchical softmax.
+    if "F" in only:
+        rows += run_config(
+            "expF_cbow_d100_full_ns", seeds, arch="cbow", dim=100, epochs=1,
+            max_words=None, vocab_size=None, context_grad=REPRO_CONTEXT_GRAD,
+            sample=1e-3, loss="ns", **non_sample_base
+        )
+        rows += run_config(
+            "expF_skipgram_d100_full_ns", sg_seeds, arch="skipgram", dim=100, epochs=1,
+            max_words=None, vocab_size=None, context_grad="mean",
+            sample=1e-3, loss="ns", **non_sample_base
+        )
 
     summary = summarize(rows)
 
