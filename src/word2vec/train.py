@@ -160,7 +160,7 @@ def train(
             b_t = torch.from_numpy(b.astype(np.int64)).to(device, non_blocking=True)
 
             optimizer.zero_grad()
-            loss = model(a_t, b_t)  # mean per-example loss
+            batch_loss = model(a_t, b_t)  # mean per-example loss
             # The paper's SGD updates once per single training example
             # (batch size 1). We batch for GPU throughput, but model()
             # returns the *mean* loss over the batch, so backpropagating
@@ -185,11 +185,11 @@ def train(
             # step, breaking the feedback loop before it can compound,
             # without measurably affecting CBOW (verified: identical 4.2%
             # total accuracy clipped vs unclipped).
-            (loss * len(a)).backward()
+            (batch_loss * len(a)).backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=grad_clip_norm)
             optimizer.step()
 
-            recent_losses.append(loss.item())
+            recent_losses.append(batch_loss.item())
             global_step += 1
             windowed = sum(recent_losses) / len(recent_losses)
             progress.update(i + 1, loss=f"{windowed:.4f}", lr=f"{current_lr:.5f}")
