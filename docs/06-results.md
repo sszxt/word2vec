@@ -211,6 +211,40 @@ the paper leaves unstated, the second from a technique the paper does not
 contain. The remaining distance to reference text8 implementations (~15-20%) is
 plausibly the single-epoch limit measured in Experiment D.
 
+## Experiment F: negative sampling (NOT part of the reproduction)
+
+Also not part of the reproduction: negative sampling is from the same NIPS
+2013 follow-up as subsampling (`docs/07-negative-sampling.md`). Same settings
+as Experiment E (`sample=1e-3`, dim=100, full data) with `--loss ns` instead
+of hierarchical softmax, isolating the loss function as the only variable
+between the two rows below.
+
+| | hierarchical softmax (Exp. E) | negative sampling (Exp. F) | delta |
+|---|---|---|---|
+| CBOW | 11.59 ± .23 | 5.73 ± .25 | **-5.86** |
+| Skip-gram | 19.87 ± .07 | 16.01 ± .33 | **-3.86** |
+
+Negative sampling scores well below hierarchical softmax for both
+architectures at this single-epoch, `negative=5` setting, and the gap is far
+outside seed noise for either. `docs/07-negative-sampling.md` cross-validates
+this implementation against gensim at the same settings and finds gensim in
+the same range (CBOW 6.4%, Skip-gram 13.4% -- gensim's Skip-gram is actually
+*below* ours here), which is the more load-bearing check: it says this gap is
+a property of negative sampling at this scale and `negative` count, not a bug
+in this implementation specifically.
+
+The likely mechanism is training signal per example. Hierarchical softmax
+updates every internal node on a word's path -- 10.65 sigmoid evaluations on
+average (`docs/03`) -- from every single training example that touches it.
+Negative sampling updates exactly `1 + negative = 6` output rows per example
+regardless of word frequency, which is cheaper (`docs/07`'s own point) but
+also a narrower training signal per step at fixed data volume. word2vec.c's
+own defaults pair negative sampling with much larger corpora and more
+negative samples in practice than this single-epoch, 17M-token setting
+exercises; nothing here should be read as "negative sampling is worse than
+hierarchical softmax" in general, only as "at this scale, with `negative=5`
+and one epoch, it is."
+
 ## Training time
 
 Single RTX 5070, batch_size=2048, mean over 3 seeds.

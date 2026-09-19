@@ -162,13 +162,14 @@ a gap comes from our implementation rather than from scale. See
 python scripts/run_experiments.py
 ```
 
-Runs all five experiments described in
+Runs all six experiments described in
 [`docs/06-results.md`](docs/06-results.md) -- architecture comparison, CBOW
 dimensionality/data-amount grid, Skip-gram dimensionality sweep, epochs vs
-data amount, and a subsampling arm marked as beyond-the-paper -- over 3
-seeds each (87 runs, `--seeds` to change). Writes per-run
-`results/results.{json,csv}` and per-configuration means and standard
-deviations to `results/results_summary.csv`.
+data amount, and subsampling and negative-sampling arms marked as
+beyond-the-paper -- over 3 seeds each (93 runs, `--seeds` to change; `--only`
+to (re)run a subset). Writes per-run `results/results.{json,csv}` and
+per-configuration means and standard deviations to
+`results/results_summary.csv`.
 
 Takes roughly an hour on a single consumer GPU. Skip-gram's larger pair
 count dominates the cost -- see the training-time breakdown in

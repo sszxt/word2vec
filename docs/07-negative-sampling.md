@@ -68,13 +68,30 @@ implementation needs no such table.
 
 ## Cross-validation against gensim
 
-<!-- TODO: fill in with a real run once available. Requires the `reference`
-extra (`pip install -e ".[reference]"`) and scripts/reference_gensim.py,
-which trains both implementations with matching hyperparameters on the same
-corpus/vocabulary and scores both with our own evaluator -- isolating whether
-a gap comes from our implementation rather than from text8's small scale
-(the same limitation the paper's own numbers can't help us with, since they
-come from 50-400x more data; see docs/06-results.md). -->
+`scripts/reference_gensim.py --arch {cbow,skipgram} --dim 100 --loss ns
+--sample 1e-3` trains both implementations with word2vec.c's own
+negative-sampling defaults (5 noise words, subsampling at `t=1e-3`) on the
+same corpus and vocabulary, then scores both with our own evaluator:
+
+| | semantic | syntactic | total | train time |
+|---|---|---|---|---|
+| CBOW, ours | 3.7% | 7.4% | 5.9% | 13.6s |
+| CBOW, gensim | 4.0% | 8.1% | 6.4% | 2.2s |
+| Skip-gram, ours | 9.4% | 20.2% | 15.7% | 85.7s |
+| Skip-gram, gensim | 7.8% | 17.4% | 13.4% | 5.8s |
+
+CBOW lands within half a point of gensim; Skip-gram beats it outright. Single
+seed each, not the 3-seed measurement `docs/06-results.md` uses for the
+reproduction itself -- this is a correctness check, not a claim about which
+implementation is "better", and the question it exists to answer is just
+whether either one is broken relative to the other. Neither gap is large
+enough to suggest that.
+
+gensim trains 6-15x faster here, which is expected and not a correctness
+signal: it's multi-threaded, hand-optimized C reached through Cython, against
+a single GPU paying Python-loop and kernel-launch overhead per minibatch on a
+comparatively small amount of work per step (`docs/06-results.md`'s training-time
+section has the same story for hierarchical softmax).
 
 ## Practical notes
 
